@@ -1,0 +1,47 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:19:29.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <lobtype cdat="2011-12-19T13:52:32.000000" udat="2025-03-04T11:56:46.000000" action="C" id="117" mediaobjecttypeId="200000016" mediaobjecttypeUkey="IMAGES" pos="6">
+      <mediatype>image/jpeg</mediatype>
+      <attrclasses>
+        <attrclass ukey="LORES_JPEG_RGB">
+          <name>
+            <clText150 cl="de-DE">LORES_JPEG_RGB</clText150>
+            <clText150 cl="en-GB">LORES_JPEG_RGB</clText150>
+          </name>
+        </attrclass>
+      </attrclasses>
+      <ukey>LORES_JPEG_RGB</ukey>
+      <name>
+        <clText2000 cl="de-DE">LORES_JPEG_RGB</clText2000>
+        <clText2000 cl="en-GB">LORES_JPEG_RGB</clText2000>
+      </name>
+    </lobtype>
+    <lobtype cdat="2017-02-02T09:11:15.000000" udat="2025-03-04T11:56:46.000000" action="C" id="239" mediaobjecttypeId="200000016" mediaobjecttypeUkey="IMAGES" pos="10">
+      <mediatype>image/png</mediatype>
+      <attrclasses>
+        <attrclass ukey="PRODUCT_CUT_OCS">
+          <name>
+            <clText150 cl="de-DE">PRODUCT_CUT_OCS</clText150>
+            <clText150 cl="en-GB">PRODUCT_CUT_OCS</clText150>
+          </name>
+        </attrclass>
+      </attrclasses>
+      <ukey>PRODUCT_CUT_OCS</ukey>
+      <name>
+        <clText2000 cl="de-DE">PRODUCT_CUT_OCS</clText2000>
+        <clText2000 cl="en-GB">PRODUCT_CUT_OCS</clText2000>
+      </name>
+    </lobtype>
+  </businessObjects>
+</webexport>

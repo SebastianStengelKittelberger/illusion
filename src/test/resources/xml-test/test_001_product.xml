@@ -1,0 +1,42 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:31:03.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <product cdat="2025-10-06T09:37:23.000000" udat="2026-03-05T00:18:12.000000" action="C" id="100065563" mfact="Bosch" artno="1 600 A03 9SA">
+      <name>
+        <clText2000 cl="de-DE">Schraubendreher TX15 x 100 mm</clText2000>
+        <clText2000 cl="en-GB">PRO Screwdriver TX15 x 100 mm</clText2000>
+      </name>
+      <categories>
+        <category pos="1" id="108174766"/>
+      </categories>
+      <producttypes>
+        <producttype pos="1" id="100002348"/>
+      </producttypes>
+      <attrvals>
+        <attrval attr_id="7" ukey="STATUS" name="Status" datatype="text" valuepos="1">
+          <textval>OK</textval>
+        </attrval>
+      </attrvals>
+    </product>
+    <product cdat="2024-01-10T08:00:00.000000" udat="2025-06-15T12:00:00.000000" action="C" id="100012345" mfact="Bosch" artno="0 601 234 500">
+      <name>
+        <clText2000 cl="de-DE">Bohrmaschine Testprodukt</clText2000>
+        <clText2000 cl="en-GB">Test Drill</clText2000>
+      </name>
+      <categories>
+        <category pos="1" id="108174766"/>
+        <category pos="2" id="108174767"/>
+      </categories>
+    </product>
+  </businessObjects>
+</webexport>

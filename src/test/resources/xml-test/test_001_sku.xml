@@ -1,0 +1,24 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:45:34.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <sku cdat="2025-12-04T11:23:57.000000" udat="2026-02-21T09:11:01.000000" action="C" id="28842595" product="100065355" mfact="Bosch" artno="2 608 620 766" cso="DE" sku="2608620766" gtin="06949509256577" ean="6949509256577">
+      <attrvals>
+        <attrval attr_id="7" ukey="STATUS" name="Status" datatype="text" valuepos="1">
+          <textval>OK</textval>
+        </attrval>
+      </attrvals>
+    </sku>
+    <sku cdat="2024-05-01T00:00:00.000000" udat="2025-01-01T00:00:00.000000" action="C" id="12156980" product="100016943" mfact="Bosch" artno="0 601 015 200" cso="DE" sku="0601015200" gtin="03165140431972" ean="3165140431972">
+    </sku>
+  </businessObjects>
+</webexport>

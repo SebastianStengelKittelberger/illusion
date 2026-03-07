@@ -1,0 +1,38 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:14:18.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <category cdat="2007-09-25T10:15:15.000000" udat="2026-02-12T02:11:34.000000" action="C" id="100101271" ctypeId="175" ctypeUkey="OCS_BI_ROOT">
+      <ukey>OCSBLAU</ukey>
+      <name>
+        <clText2000 cl="de-DE">Handwerk/Industrie (BI)</clText2000>
+        <clText2000 cl="en-GB">Trade/industry (BI)</clText2000>
+      </name>
+      <pos>1</pos>
+      <shortdesc>
+        <clText2000 cl="de-DE">Kurzbeschreibung DE</clText2000>
+        <clText2000 cl="en-GB">Short description EN</clText2000>
+      </shortdesc>
+    </category>
+    <category cdat="2008-03-10T08:00:00.000000" udat="2025-11-01T00:00:00.000000" action="C" id="100101272" parentId="100101271" ctypeId="175" ctypeUkey="OCS_BI_ROOT" level="2">
+      <ukey>OCSBLAU_SUB</ukey>
+      <name>
+        <clText2000 cl="de-DE">Unterkategorie</clText2000>
+        <clText2000 cl="en-GB">Subcategory</clText2000>
+      </name>
+      <pos>1</pos>
+      <mediaobjects>
+        <mediaobject pos="1" id="200000704"/>
+      </mediaobjects>
+    </category>
+  </businessObjects>
+</webexport>

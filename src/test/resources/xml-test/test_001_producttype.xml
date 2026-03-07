@@ -1,0 +1,35 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:19:15.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <producttype cdat="2001-05-09T17:30:35.000000" udat="2025-02-17T10:21:01.000000" action="C" id="100000001" level="1">
+      <ukey>TRADE</ukey>
+      <name>
+        <clText2000 cl="de-DE">Handwerk/Industrie</clText2000>
+        <clText2000 cl="en-GB">Trade / Industry</clText2000>
+      </name>
+      <pos>1</pos>
+    </producttype>
+    <producttype cdat="2001-06-15T17:33:47.000000" udat="2026-03-05T00:45:35.000000" action="C" id="100002348" parentId="100000001" level="2">
+      <ukey>DRILL</ukey>
+      <name>
+        <clText2000 cl="de-DE">Bohrmaschine (elektrisch)</clText2000>
+        <clText2000 cl="en-GB">Drill (electric)</clText2000>
+      </name>
+      <pos>7</pos>
+      <shortdesc>
+        <clText2000 cl="de-DE">Bohrmaschine, elektrisch</clText2000>
+        <clText2000 cl="en-GB">Drill, electric</clText2000>
+      </shortdesc>
+    </producttype>
+  </businessObjects>
+</webexport>

@@ -1,0 +1,29 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:46:08.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <price cdat="2013-03-09T13:44:38.000000" udat="2025-12-29T14:26:03.000000" action="C" id="1215698000000003" skuId="12156980" pricetypeId="3" currency="EUR" mfact="Bosch" artno="0 601 015 200" cso="DE" sku="0601015200" gtin="03165140431972" ean="3165140431972">
+      <pricetypeName>
+        <clText50 cl="de-DE">POM</clText50>
+        <clText50 cl="en-GB">Price w/o VAT</clText50>
+      </pricetypeName>
+      <priceValue>207</priceValue>
+    </price>
+    <price cdat="2013-03-09T13:44:38.000000" udat="2023-12-27T07:44:08.000000" action="C" id="1215698100000003" skuId="12156981" pricetypeId="3" currency="EUR" mfact="Bosch" artno="0 601 015 400" cso="DE" sku="0601015400" gtin="03165140486965" ean="3165140486965">
+      <pricetypeName>
+        <clText50 cl="de-DE">POM</clText50>
+        <clText50 cl="en-GB">Price w/o VAT</clText50>
+      </pricetypeName>
+      <priceValue>184</priceValue>
+    </price>
+  </businessObjects>
+</webexport>

@@ -1,0 +1,23 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:19:01.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <mfact cdat="2001-05-09T17:30:38.000000" udat="2007-03-16T10:54:29.000000" action="C" id="1">
+      <ukey>BOSCH</ukey>
+      <name>Bosch</name>
+    </mfact>
+    <mfact cdat="2001-05-09T17:30:39.000000" udat="2001-05-09T17:30:39.000000" action="C" id="3">
+      <ukey>SKIL</ukey>
+      <name>Skil</name>
+    </mfact>
+  </businessObjects>
+</webexport>

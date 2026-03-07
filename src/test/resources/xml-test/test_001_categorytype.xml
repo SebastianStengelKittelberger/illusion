@@ -1,0 +1,35 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T01:13:28.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <categorytype cdat="2007-07-04T11:20:58.000000" udat="2025-09-02T09:58:37.000000" action="C" id="53" level="1">
+      <ukey>OCS2.0</ukey>
+      <name>
+        <clText2000 cl="de-DE">OCS2.0</clText2000>
+        <clText2000 cl="en-GB">OCS2.0</clText2000>
+      </name>
+      <pos>1</pos>
+      <shortdesc>
+        <clText2000 cl="de-DE">Schablone für Kategorien Onlinekatalog</clText2000>
+        <clText2000 cl="en-GB">Template for categories of online catalogue</clText2000>
+      </shortdesc>
+    </categorytype>
+    <categorytype cdat="2008-01-15T09:00:00.000000" udat="2023-06-01T12:00:00.000000" action="C" id="175" level="1">
+      <ukey>OCS_BI_ROOT</ukey>
+      <name>
+        <clText2000 cl="de-DE">OCS BI Root</clText2000>
+        <clText2000 cl="en-GB">OCS BI Root</clText2000>
+      </name>
+      <pos>2</pos>
+    </categorytype>
+  </businessObjects>
+</webexport>

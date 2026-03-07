@@ -1,0 +1,35 @@
+<webexport xsi:schemaLocation="http://www.advasta.com/XMLSchema/6.02w http://www.advasta.com/XMLSchema/6.02w/export.xsd" xmlns="http://www.advasta.com/XMLSchema/6.02w" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="6.0.2.26583">
+  <header>
+    <timestamp>2026-03-05T00:57:16.000000</timestamp>
+    <programInfo name="test" version="1" buildDate="2024-01-01T00:00:00.000000"/>
+    <datasource dbOwner="test" dbInstance="test" dbHost="test" user="1" syslang="en-GB">
+      <name>Test</name>
+    </datasource>
+    <clngList>
+      <clng>de-DE</clng>
+      <clng>en-GB</clng>
+    </clngList>
+  </header>
+  <businessObjects>
+    <attr cdat="2007-07-04T11:20:59.000000" udat="2022-04-12T10:48:44.000000" action="C" id="8">
+      <ukey>TITLE</ukey>
+      <name>
+        <clText150 cl="de-DE">Kategoriebezeichnung</clText150>
+        <clText150 cl="en-GB">Category designation</clText150>
+      </name>
+      <shortname>
+        <clText150 cl="de-DE">Kategoriebez.</clText150>
+        <clText150 cl="en-GB">Cat. designation</clText150>
+      </shortname>
+      <datatype>text</datatype>
+    </attr>
+    <attr cdat="2007-07-04T11:20:59.000000" udat="2020-01-01T00:00:00.000000" action="C" id="9">
+      <ukey>TEXT</ukey>
+      <name>
+        <clText150 cl="de-DE">Kategorietext</clText150>
+        <clText150 cl="en-GB">Category text</clText150>
+      </name>
+      <datatype>text</datatype>
+    </attr>
+  </businessObjects>
+</webexport>
