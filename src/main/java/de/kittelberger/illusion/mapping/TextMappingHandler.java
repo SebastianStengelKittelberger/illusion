@@ -1,7 +1,7 @@
 package de.kittelberger.illusion.mapping;
 
+import de.kittelberger.illusion.model.Attribute;
 import de.kittelberger.illusion.model.MapConfig;
-import de.kittelberger.illusion.util.ClUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -27,14 +27,25 @@ public class TextMappingHandler implements MappingHandler {
     if (isFallback && result.containsKey(config.getTargetField())) return;
 
     if ("$NAME$".equals(ukey)) {
-      String value = ClUtil.getCleanedValue(ctx.product().getName(), ctx.locale());
+      String value = ctx.product().productMetaData() != null
+        ? ctx.product().productMetaData().getName()
+        : null;
       result.put(config.getTargetField(), Pair.of(config.getTargetFieldType(), value));
       return;
     }
 
-    ctx.skuAttributes().getFirstAttribute(ukey).ifPresent(attrval -> {
-      String value = ctx.localizedTextExtractor().apply(attrval);
+    ctx.skuAttributes().getFirstAttribute(ukey).ifPresent(attribute -> {
+      String value = extractText(attribute);
       result.put(config.getTargetField(), Pair.of(config.getTargetFieldType(), value));
     });
+  }
+
+  private static String extractText(Attribute attribute) {
+    if (attribute.getReferences() == null) return null;
+    Map<String, Object> values = attribute.getReferences().right();
+    Object cltext = values.get("CLTEXT");
+    if (cltext != null) return cltext.toString();
+    Object text = values.get("TEXT");
+    return text != null ? text.toString() : null;
   }
 }

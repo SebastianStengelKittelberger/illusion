@@ -1,8 +1,7 @@
 package de.kittelberger.illusion.service;
 
+import de.kittelberger.illusion.model.Attribute;
 import de.kittelberger.illusion.model.SkuAttributes;
-import de.kittelberger.webexport602w.solr.api.generated.Attrval;
-import de.kittelberger.illusion.data.XmlConversionUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -16,11 +15,16 @@ public class JavaParserService {
   private static final Pattern SKU_ATTR_PATTERN =
     Pattern.compile("\\$skuAttr\\((\\w+)\\)\\$\\.(\\w+\\(\\))");
 
-  private static final Map<String, Function<Attrval, Object>> METHOD_HANDLERS = Map.of(
-    "getTextVal()", Attrval::getTextval,
-    "getNumVal()",  attrval -> attrval.getNumval() != null ? attrval.getNumval().getValue() : null,
-    "getDateVal()", attrval -> XmlConversionUtil.toDate(attrval.getDateval())
+  private static final Map<String, Function<Attribute, Object>> METHOD_HANDLERS = Map.of(
+    "getTextVal()", attr -> getRefValue(attr, "TEXT"),
+    "getNumVal()",  attr -> getRefValue(attr, "TEXT"),
+    "getDateVal()", attr -> getRefValue(attr, "TEXT")
   );
+
+  private static Object getRefValue(Attribute attr, String key) {
+    if (attr.getReferences() == null) return null;
+    return attr.getReferences().right().get(key);
+  }
 
   public String replaceAttributeCalls(
     final String code,
@@ -32,7 +36,7 @@ public class JavaParserService {
       String ukey       = matcher.group(1);
       String methodCall = matcher.group(2);
 
-      Function<Attrval, Object> handler = METHOD_HANDLERS.get(methodCall);
+      Function<Attribute, Object> handler = METHOD_HANDLERS.get(methodCall);
       if (handler == null) {
         matcher.appendReplacement(sb, "null");
         continue;

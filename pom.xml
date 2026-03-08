@@ -38,6 +38,11 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
 			<scope>provided</scope>
 		</dependency>
@@ -46,13 +51,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-    <dependency>
-      <groupId>de.kittelberger</groupId>
-      <artifactId>advasta-6.02w-solr-api</artifactId>
-      <version>2.0.3</version>
-    </dependency>
-
-
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -69,6 +67,46 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals><goal>toolchain</goal></goals>
+          </execution>
+        </executions>
+        <configuration>
+          <toolchains>
+            <jdk><version>25</version></jdk>
+          </toolchains>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <configuration>
+          <delimiters>
+            <delimiter>@</delimiter>
+          </delimiters>
+          <useDefaultDelimiters>false</useDefaultDelimiters>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <showWarnings>true</showWarnings>
+          <showDeprecation>true</showDeprecation>
+          <release>${java.version}</release>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>1.18.42</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
 		</plugins>
 	</build>
 	<repositories>
