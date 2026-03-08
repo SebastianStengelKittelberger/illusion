@@ -16,14 +16,14 @@ public class JavaParserService {
     Pattern.compile("\\$skuAttr\\((\\w+)\\)\\$\\.(\\w+\\(\\))");
 
   private static final Map<String, Function<Attribute, Object>> METHOD_HANDLERS = Map.of(
-    "getTextVal()", attr -> getRefValue(attr, "TEXT"),
-    "getNumVal()",  attr -> getRefValue(attr, "TEXT"),
-    "getDateVal()", attr -> getRefValue(attr, "TEXT")
+    "getText()", attr -> getRefValue(attr, "TEXT"),
+    "getNumVal()",  attr -> getRefValue(attr, "NUMBER"),
+    "getLangSpecificText()", attr -> getRefValue(attr, "CLTEXT")
   );
 
   private static Object getRefValue(Attribute attr, String key) {
     if (attr.getReferences() == null) return null;
-    return attr.getReferences().right().get(key);
+    return attr.getReferences().get(key);
   }
 
   public String replaceAttributeCalls(

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-@Order(1)
+@Order(10)
 public class TextMappingHandler implements MappingHandler {
 
   @Override
@@ -42,7 +42,7 @@ public class TextMappingHandler implements MappingHandler {
 
   private static String extractText(Attribute attribute) {
     if (attribute.getReferences() == null) return null;
-    Map<String, Object> values = attribute.getReferences().right();
+    Map<String, Object> values = attribute.getReferences();
     Object cltext = values.get("CLTEXT");
     if (cltext != null) return cltext.toString();
     Object text = values.get("TEXT");

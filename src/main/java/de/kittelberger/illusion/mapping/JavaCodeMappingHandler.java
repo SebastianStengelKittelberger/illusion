@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-@Order(2)
+@Order(100)
 public class JavaCodeMappingHandler implements MappingHandler {
 
   private static final ExpressionParser SPEL = new SpelExpressionParser();

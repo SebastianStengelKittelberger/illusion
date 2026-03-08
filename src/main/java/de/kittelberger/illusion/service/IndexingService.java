@@ -3,11 +3,7 @@ package de.kittelberger.illusion.service;
 import de.kittelberger.illusion.data.LoadDataService;
 import de.kittelberger.illusion.mapping.MappingContext;
 import de.kittelberger.illusion.mapping.MappingHandler;
-import de.kittelberger.illusion.model.DTOType;
-import de.kittelberger.illusion.model.MapConfig;
-import de.kittelberger.illusion.model.Product;
-import de.kittelberger.illusion.model.SkuAttributes;
-import de.kittelberger.illusion.model.TargetType;
+import de.kittelberger.illusion.model.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Service
 public class IndexingService {
@@ -71,7 +70,9 @@ public class IndexingService {
               product.productAttributes() != null ? product.productAttributes() : List.of()
             ),
             product,
-            Locale.of(language, country.toUpperCase())
+            Locale.of(language, country.toUpperCase()),
+            loadDataService.getMediaObjects(country, language),
+            loadDataService.getDomain(country, language)
           );
 
           skuMapConfigs.forEach(config ->

@@ -6,9 +6,6 @@ bosch:
   adapter:
     url: http://localhost:8080
 
-xml:
-  product-limit: 10     # set to -1 to process all products
-  product-ids: 100024723  # comma-separated list of product IDs to process; empty = all
 server:
   servlet:
     context-path: /illusion

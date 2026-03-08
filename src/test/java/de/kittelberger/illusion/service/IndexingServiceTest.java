@@ -10,7 +10,7 @@ import de.kittelberger.illusion.model.MapConfig;
 import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.ProductMetaData;
 import de.kittelberger.illusion.model.TargetType;
-import de.kittelberger.illusion.model.AttributeRef;
+import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -161,7 +161,7 @@ class IndexingServiceTest {
     values.put("TEXT", text);
     values.put("BOOLEAN", false);
     values.put("CLTEXT", cltext != null ? cltext : text);
-    a.setReferences(new AttributeRef(ukey, values));
+    a.setReferences(values);
     return a;
   }
 

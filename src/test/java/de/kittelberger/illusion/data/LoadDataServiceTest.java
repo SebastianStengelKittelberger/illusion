@@ -11,6 +11,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -75,7 +76,7 @@ class LoadDataServiceTest {
           "productAttributes":[],
           "skuAttributes":[
             {"ukey":"TITLE","referenceIds":{"attrId":8},
-             "references":{"left":"TITLE","right":{"TEXT":"Bohrmaschine","BOOLEAN":false,"CLTEXT":"Bohrmaschine"}}}
+             "references":{"TEXT":"Bohrmaschine","BOOLEAN":false,"CLTEXT":"Bohrmaschine"}}
           ]}]
         """,
         MediaType.APPLICATION_JSON
@@ -86,7 +87,7 @@ class LoadDataServiceTest {
     List<Attribute> skuAttrs = products.getFirst().skuAttributes();
     assertThat(skuAttrs).hasSize(1);
     assertThat(skuAttrs.getFirst().getUkey()).isEqualTo("TITLE");
-    assertThat(skuAttrs.getFirst().getReferences().right()).containsEntry("TEXT", "Bohrmaschine");
+    assertThat(skuAttrs.getFirst().getReferences()).containsEntry("TEXT", "Bohrmaschine");
   }
 
   // ---------------------------------------------------------------------------
@@ -124,9 +125,9 @@ class LoadDataServiceTest {
         MediaType.APPLICATION_JSON
       ));
 
-    List<MediaObject> mediaObjects = loadDataService.getMediaObjects("de");
+    Map<Long,MediaObject> mediaObjects = loadDataService.getMediaObjects("de", "de");
 
     assertThat(mediaObjects).hasSize(1);
-    assertThat(mediaObjects.getFirst().getName()).isEqualTo("image1.jpg");
+    assertThat(mediaObjects.values().stream().toList().getFirst().getName()).isEqualTo("image1.jpg");
   }
 }

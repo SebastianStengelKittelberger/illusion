@@ -10,8 +10,8 @@ public class Attribute {
   private String ukey;
   private Map<String, Long> referenceIds;
   /**
-   * left: UKEY, right: value map with keys TEXT, BOOLEAN, CLTEXT
+   * key: type (TEXT, BOOLEAN, CLTEXT), value: actual value
    */
-  private AttributeRef references;
+  private Map<String, Object> references;
 
 }

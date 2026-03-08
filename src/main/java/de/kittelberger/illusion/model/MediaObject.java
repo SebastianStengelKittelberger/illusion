@@ -11,8 +11,10 @@ import java.util.Map;
 public class MediaObject {
 
   private String name;
+  private String ukey;
   private List<Attribute> attributes;
   private Map<String, Long> references;
   private List<MediaSpecifics> mediaSpecifics;
+  private Long id;
 
 }
