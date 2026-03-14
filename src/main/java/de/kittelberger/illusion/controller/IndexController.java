@@ -21,7 +21,7 @@ public class IndexController {
   }
 
   @PostMapping("/{country}/{language}/index")
-  public Map<String, Pair<String, Object>> index(
+  public Map<String, Map<String,Pair<String, Object>>> index(
     @PathVariable String country,
     @PathVariable String language,
     @RequestBody List<MapConfig> mapConfigs

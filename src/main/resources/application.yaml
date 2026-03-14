@@ -1,12 +1,15 @@
 spring:
   application:
     name: illusion
+  mvc:
+    async:
+      request-timeout: 1800000  # 30 minutes — for long-running streaming requests
 
 bosch:
   adapter:
-    url: http://localhost:8080
+    url: http://localhost:8082/adapter/
 
 server:
   servlet:
     context-path: /illusion
-  port: 8082
+  port: 8079

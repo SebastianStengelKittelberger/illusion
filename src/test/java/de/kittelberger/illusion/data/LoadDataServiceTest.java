@@ -16,6 +16,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Unit tests for {@link LoadDataService} using a mocked REST server.
@@ -30,7 +31,7 @@ class LoadDataServiceTest {
     RestClient.Builder builder = RestClient.builder();
     mockServer = MockRestServiceServer.bindTo(builder).build();
     RestClient restClient = builder.baseUrl("http://localhost:8080").build();
-    loadDataService = new LoadDataService(restClient);
+    loadDataService = new LoadDataService(restClient, new ObjectMapper());
   }
 
   // ---------------------------------------------------------------------------
@@ -45,7 +46,7 @@ class LoadDataServiceTest {
         [{"productMetaData":{"name":"Bohrmaschine","id":1,"artNo":"0601015200"},
           "skuMetaData":[],
           "productAttributes":[],
-          "skuAttributes":[]}]
+          "skuAttributes":{}}]
         """,
         MediaType.APPLICATION_JSON
       ));
@@ -74,20 +75,24 @@ class LoadDataServiceTest {
         [{"productMetaData":{"name":"Bohrmaschine","id":1,"artNo":"123"},
           "skuMetaData":[],
           "productAttributes":[],
-          "skuAttributes":[
-            {"ukey":"TITLE","referenceIds":{"attrId":8},
-             "references":{"TEXT":"Bohrmaschine","BOOLEAN":false,"CLTEXT":"Bohrmaschine"}}
-          ]}]
+          "skuAttributes":{
+            "SKU-001":[
+              {"ukey":"TITLE","referenceIds":{"attrId":8},
+               "references":{"TEXT":"Bohrmaschine","BOOLEAN":false,"CLTEXT":"Bohrmaschine"}}
+            ]
+          }}]
         """,
         MediaType.APPLICATION_JSON
       ));
 
     List<Product> products = loadDataService.getProducts("DE", "de");
 
-    List<Attribute> skuAttrs = products.getFirst().skuAttributes();
+    Map<String, List<Attribute>> skuAttrs = products.getFirst().skuAttributes();
     assertThat(skuAttrs).hasSize(1);
-    assertThat(skuAttrs.getFirst().getUkey()).isEqualTo("TITLE");
-    assertThat(skuAttrs.getFirst().getReferences()).containsEntry("TEXT", "Bohrmaschine");
+    List<Attribute> attrs = skuAttrs.get("SKU-001");
+    assertThat(attrs).hasSize(1);
+    assertThat(attrs.getFirst().getUkey()).isEqualTo("TITLE");
+    assertThat(attrs.getFirst().getReferences()).containsEntry("TEXT", "Bohrmaschine");
   }
 
   // ---------------------------------------------------------------------------
@@ -117,7 +122,7 @@ class LoadDataServiceTest {
 
   @Test
   void getMediaObjects_deserializesMediaObjectList() {
-    mockServer.expect(requestTo("http://localhost:8080/de/media-objects"))
+    mockServer.expect(requestTo("http://localhost:8080/de/de/media-objects"))
       .andRespond(withSuccess(
         """
         [{"name":"image1.jpg","attributes":[],"references":{},"mediaSpecifics":[]}]

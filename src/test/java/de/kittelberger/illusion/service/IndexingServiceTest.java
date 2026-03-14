@@ -11,6 +11,7 @@ import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.ProductMetaData;
 import de.kittelberger.illusion.model.TargetType;
 import java.util.Map;
+import java.util.function.Predicate;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,9 +20,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,9 +60,9 @@ class IndexingServiceTest {
 
   @Test
   void indexProduct_withNoProducts_returnsEmptyMap() {
-    when(loadDataService.getProducts("DE", "de")).thenReturn(List.of());
+    mockProducts();
 
-    Map<String, Pair<String, Object>> result =
+    List<Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(TITLE_SKU_CONFIG, NAME_PRODUCT_FALLBACK), "DE", "de");
 
     assertThat(result).isEmpty();
@@ -72,11 +74,11 @@ class IndexingServiceTest {
 
   @Test
   void indexProduct_alwaysLoadsProducts() {
-    when(loadDataService.getProducts("DE", "de")).thenReturn(List.of());
+    mockProducts();
 
     indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de");
 
-    org.mockito.Mockito.verify(loadDataService).getProducts("DE", "de");
+    verify(loadDataService).streamProducts(org.mockito.ArgumentMatchers.eq("DE"), org.mockito.ArgumentMatchers.eq("de"), org.mockito.ArgumentMatchers.any());
   }
 
   // ---------------------------------------------------------------------------
@@ -86,7 +88,7 @@ class IndexingServiceTest {
   @Test
   void indexProduct_ignoresCategoryTargetConfigs() {
     MapConfig categoryConfig = mapConfig(TargetType.CATEGORY, DTOType.CATEGORY, "NAME", "TEXT", "name", "STRING", false);
-    when(loadDataService.getProducts("DE", "de")).thenReturn(List.of());
+    mockProducts();
 
     assertThat(indexingService.indexProduct(List.of(categoryConfig), "DE", "de")).isEmpty();
   }
@@ -100,14 +102,15 @@ class IndexingServiceTest {
     Attribute titleAttr = attribute("TITLE", "PRO Screwdriver TX15 x 100 mm");
     Product product = productWithSkuAttributes(List.of(titleAttr), List.of());
 
-    when(loadDataService.getProducts("DE", "de")).thenReturn(List.of(product));
+    mockProducts(product);
 
-    Map<String, Pair<String, Object>> result =
+    List<Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de");
 
-    assertThat(result).containsKey("name");
-    assertThat(result.get("name").getLeft()).isEqualTo("STRING");
-    assertThat(result.get("name").getRight()).isEqualTo("PRO Screwdriver TX15 x 100 mm");
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0)).containsKey("name");
+    assertThat(result.get(0).get("name").getLeft()).isEqualTo("STRING");
+    assertThat(result.get(0).get("name").getRight()).isEqualTo("PRO Screwdriver TX15 x 100 mm");
   }
 
   @Test
@@ -115,12 +118,12 @@ class IndexingServiceTest {
     Attribute titleAttr = attribute("TITLE", "Schraubendreher TX15 x 100 mm", "Schraubendreher TX15 x 100 mm");
     Product product = productWithSkuAttributes(List.of(titleAttr), List.of());
 
-    when(loadDataService.getProducts("DE", "de")).thenReturn(List.of(product));
+    mockProducts(product);
 
-    Map<String, Pair<String, Object>> result =
+    List<Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de");
 
-    assertThat(result.get("name").getRight()).isEqualTo("Schraubendreher TX15 x 100 mm");
+    assertThat(result.get(0).get("name").getRight()).isEqualTo("Schraubendreher TX15 x 100 mm");
   }
 
   @Test
@@ -128,21 +131,21 @@ class IndexingServiceTest {
     Attribute otherAttr = attribute("COLOR", "red");
     Product product = productWithSkuAttributes(List.of(otherAttr), List.of());
 
-    when(loadDataService.getProducts("DE", "de")).thenReturn(List.of(product));
+    mockProducts(product);
 
-    assertThat(indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de")).isEmpty();
+    assertThat(indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de").get(0)).isEmpty();
   }
 
   @Test
   void indexProduct_withNameFallback_usesProductMetaDataName() {
     Product product = productWithName("Bohrmaschine XY");
 
-    when(loadDataService.getProducts("DE", "de")).thenReturn(List.of(product));
+    mockProducts(product);
 
-    Map<String, Pair<String, Object>> result =
+    List<Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(NAME_PRODUCT_FALLBACK), "DE", "de");
 
-    assertThat(result.get("name").getRight()).isEqualTo("Bohrmaschine XY");
+    assertThat(result.get(0).get("name").getRight()).isEqualTo("Bohrmaschine XY");
   }
 
   // ---------------------------------------------------------------------------
@@ -166,11 +169,11 @@ class IndexingServiceTest {
   }
 
   private static Product productWithSkuAttributes(List<Attribute> skuAttrs, List<Attribute> productAttrs) {
-    return new Product(new ProductMetaData("Product", 1L, "ART-001"), List.of(), productAttrs, skuAttrs);
+    return new Product(new ProductMetaData("Product", 1L, "ART-001"), List.of(), productAttrs, Map.of("SKU-001", skuAttrs));
   }
 
   private static Product productWithName(String name) {
-    return new Product(new ProductMetaData(name, 1L, "ART-001"), List.of(), List.of(), List.of());
+    return new Product(new ProductMetaData(name, 1L, "ART-001"), List.of(), List.of(), Map.of());
   }
 
   private static MapConfig mapConfig(
@@ -186,5 +189,22 @@ class IndexingServiceTest {
     config.setTargetFieldType(targetFieldType);
     config.setIsFallback(isFallback);
     return config;
+  }
+
+  @SafeVarargs
+  private final void mockProducts(Product... products) {
+    doAnswer(invocation -> {
+      @SuppressWarnings("unchecked")
+      Predicate<Product> consumer = invocation.getArgument(2, Predicate.class);
+      for (Product product : products) {
+        if (!consumer.test(product)) {
+          break;
+        }
+      }
+      return null;
+    }).when(loadDataService).streamProducts(org.mockito.ArgumentMatchers.eq("DE"), org.mockito.ArgumentMatchers.eq("de"), org.mockito.ArgumentMatchers.any());
+
+    when(loadDataService.getMediaObjects("DE", "de")).thenReturn(Map.of());
+    when(loadDataService.getDomain("DE", "de")).thenReturn("https://example.test");
   }
 }

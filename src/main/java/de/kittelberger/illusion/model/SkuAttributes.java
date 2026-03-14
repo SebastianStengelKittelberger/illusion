@@ -1,26 +1,32 @@
 package de.kittelberger.illusion.model;
 
+import lombok.Getter;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SkuAttributes {
 
-  private final List<Attribute> skuAttributesList;
+  @Getter
+  private final Map<String,List<Attribute>> skuAttributesList;
   private final List<Attribute> productAttributesList;
-  private final Map<String, List<Attribute>> skuAttributesByUkey;
+  private final Map<String, Map<String, List<Attribute>>> skuAttributesByUkey;
   private final Map<String, List<Attribute>> productAttributesByUkey;
 
-  public SkuAttributes(final List<Attribute> skuAttributes) {
+  public SkuAttributes(final Map<String, List<Attribute>> skuAttributes) {
     this(skuAttributes, Collections.emptyList());
   }
 
   public SkuAttributes(
-    final List<Attribute> skuAttributes,
+    final Map<String,List<Attribute>> skuAttributes,
     final List<Attribute> productAttributes
   ) {
-    this.skuAttributesList = List.copyOf(skuAttributes);
+
+    Map<String, Map<String, List<Attribute>>> skuAttributesByUkey = skuAttributes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> groupByUkey(e.getValue())));
+
+    this.skuAttributesList = Map.copyOf(skuAttributes);
     this.productAttributesList = List.copyOf(productAttributes);
-    this.skuAttributesByUkey = groupByUkey(skuAttributes);
+    this.skuAttributesByUkey = skuAttributesByUkey;
     this.productAttributesByUkey = groupByUkey(productAttributes);
   }
 
@@ -30,29 +36,29 @@ public class SkuAttributes {
     );
   }
 
-  public Optional<List<Attribute>> getAttribute(String ukey) {
-    return Optional.ofNullable(skuAttributesByUkey.get(ukey));
+  public Optional<List<Attribute>> getAttribute(String sku, String ukey) {
+    return Optional.ofNullable(skuAttributesByUkey.get(sku).get(ukey));
   }
 
   public Optional<List<Attribute>> getProductAttribute(String ukey) {
     return Optional.ofNullable(productAttributesByUkey.get(ukey));
   }
 
-  public Optional<Attribute> getFirstAttribute(String ukey) {
-    return getAttribute(ukey).flatMap(list -> list.stream().findFirst());
+  public Optional<Attribute> getFirstAttribute(final String sku, final String ukey) {
+    return getAttribute(sku, ukey).flatMap(list -> list.stream().findFirst());
   }
 
-  public List<Attribute> getFirstAttributeValue(String... ukeys) {
+  public List<Attribute> getFirstAttributeValue(final String sku, final String... ukeys) {
     List<Attribute> result = new ArrayList<>();
     for (String ukey : ukeys) {
-      getAttribute(ukey).ifPresent(result::addAll);
+      getAttribute(sku, ukey).ifPresent(result::addAll);
     }
     return result;
   }
 
   /** Returns all matching attributes in their original list order. */
-  public Optional<List<Attribute>> getAttributesInOrder(String... ukeys) {
-    return filterInOrder(skuAttributesList, ukeys);
+  public Optional<List<Attribute>> getAttributesInOrder(String ukey, String... ukeys) {
+    return filterInOrder(skuAttributesList.get(ukey), ukeys);
   }
 
   /** Returns all matching product attributes in their original list order. */

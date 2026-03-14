@@ -28,7 +28,8 @@ public class JavaParserService {
 
   public String replaceAttributeCalls(
     final String code,
-    final SkuAttributes skuAttributes
+    final SkuAttributes skuAttributes,
+    final String key
   ) {
     Matcher matcher = SKU_ATTR_PATTERN.matcher(code);
     StringBuilder sb = new StringBuilder();
@@ -42,7 +43,7 @@ public class JavaParserService {
         continue;
       }
 
-      String value = skuAttributes.getFirstAttribute(ukey)
+      String value = skuAttributes.getFirstAttribute(key, ukey)
         .map(handler)
         .map(Object::toString)
         .orElse("");

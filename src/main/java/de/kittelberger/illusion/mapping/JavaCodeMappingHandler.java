@@ -9,6 +9,7 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -29,12 +30,21 @@ public class JavaCodeMappingHandler implements MappingHandler {
   }
 
   @Override
-  public void apply(MapConfig config, MappingContext ctx, Map<String, Pair<String, Object>> result) {
-    String codeLine = javaParserService.replaceAttributeCalls(config.getJavaCode(), ctx.skuAttributes());
-    try {
-      Object value = SPEL.parseExpression(codeLine).getValue();
-      result.put(config.getTargetField(), Pair.of(config.getTargetFieldType(), value));
-    } catch (Exception ignored) {
+  public void apply(
+    final MapConfig config,
+    final MappingContext ctx,
+    Map<String, Map<String, Pair<String, Object>>> result) {
+    for(String key : ctx.skuAttributes().getSkuAttributesList().keySet()) {
+      String codeLine = javaParserService.replaceAttributeCalls(config.getJavaCode(), ctx.skuAttributes(), key);
+      try {
+        Object value = SPEL.parseExpression(codeLine).getValue();
+        if (result.containsKey(key)) {
+          result.get(key).put(config.getTargetField(), Pair.of(config.getTargetFieldType(), value));
+        } else {
+          result.put(key, new HashMap<>(Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), value))));
+        }
+      } catch (Exception ignored) {
+      }
     }
   }
 }

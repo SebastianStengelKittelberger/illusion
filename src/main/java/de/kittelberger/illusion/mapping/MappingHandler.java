@@ -9,5 +9,5 @@ public interface MappingHandler {
 
   boolean supports(MapConfig config);
 
-  void apply(MapConfig config, MappingContext ctx, Map<String, Pair<String, Object>> result);
+  void apply(MapConfig config, MappingContext ctx, Map<String, Map<String, Pair<String, Object>>> result);
 }

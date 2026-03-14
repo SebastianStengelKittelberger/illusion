@@ -10,7 +10,7 @@ public class UrlBuilderUtil {
   private static final String DEFAULT_PRODUCT_SCHEME = "/{country}/{language}/products/{seoifiedName}-{Id}";
   private String productScheme = DEFAULT_PRODUCT_SCHEME;
 
-  private String mediaObjectScheme = "/binary/ocsmedia/optimized/full/{mediaObjectFilename}";
+  private String mediaObjectScheme = "/binary/ocsmedia/optimized/full/{mediaObjectFilename}.webp";
 
   public String getProductUrl(String productName, String productSKU, String protocolAndDomain, String ocsContextName, String country, String language) {
     String returnUrl = protocolAndDomain;
