@@ -55,7 +55,7 @@ public class IndexingService {
       .filter(m -> m.getDtoType().equals(DTOType.SKU)).toList();
     List<MapConfig> productDtoConfigs = productConfigs.stream()
       .filter(m -> m.getDtoType().equals(DTOType.PRODUCT)).toList();
-    Map<Long, MediaObject> mediaObjects = loadDataService.getMediaObjects(country, language);
+    Map<Long, Image> mediaObjects = loadDataService.getMediaObjects(country, language);
     String domain = loadDataService.getDomain(country, language);
     int effectiveBatchSize = Math.max(batchSize, 1);
     List<Product> batch = new ArrayList<>(effectiveBatchSize);
@@ -119,7 +119,7 @@ public class IndexingService {
     List<MapConfig> productDtoConfigs,
     String country,
     String language,
-    Map<Long, MediaObject> mediaObjects,
+    Map<Long, Image> mediaObjects,
     String domain,
     Map<String, Map<String, Pair<String, Object>>> results
   ) {
@@ -146,7 +146,7 @@ public class IndexingService {
     List<MapConfig> productDtoConfigs,
     String country,
     String language,
-    Map<Long, MediaObject> mediaObjects,
+    Map<Long, Image> mediaObjects,
     String domain,
     Map<String, Map<String, Pair<String, Object>>> results
   ) {

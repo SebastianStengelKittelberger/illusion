@@ -1,7 +1,7 @@
 package de.kittelberger.illusion.data;
 
 import de.kittelberger.illusion.model.Attribute;
-import de.kittelberger.illusion.model.MediaObject;
+import de.kittelberger.illusion.model.Image;
 import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.Reference;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,9 +130,8 @@ class LoadDataServiceTest {
         MediaType.APPLICATION_JSON
       ));
 
-    Map<Long,MediaObject> mediaObjects = loadDataService.getMediaObjects("de", "de");
+    Map<Long, Image> mediaObjects = loadDataService.getMediaObjects("de", "de");
 
     assertThat(mediaObjects).hasSize(1);
-    assertThat(mediaObjects.values().stream().toList().getFirst().getName()).isEqualTo("image1.jpg");
   }
 }

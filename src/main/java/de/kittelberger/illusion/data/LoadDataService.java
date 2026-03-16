@@ -1,6 +1,6 @@
 package de.kittelberger.illusion.data;
 
-import de.kittelberger.illusion.model.MediaObject;
+import de.kittelberger.illusion.model.Image;
 import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.Reference;
 import org.springframework.cache.annotation.Cacheable;
@@ -83,14 +83,14 @@ public class LoadDataService {
   }
 
   @Cacheable("mediaObjects")
-  public Map<Long, MediaObject> getMediaObjects(String country, String lang) {
-    Map<Long, MediaObject> resultMap = new HashMap<>();
-    List<MediaObject> result = restClient.get()
+  public Map<Long, Image> getMediaObjects(String country, String lang) {
+    Map<Long, Image> resultMap = new HashMap<>();
+    List<Image> result = restClient.get()
       .uri(country + "/" + lang + "/media-objects", lang)
       .retrieve()
       .body(new ParameterizedTypeReference<>() {});
     if (result == null) return resultMap;
-    result.forEach(mediaObject -> resultMap.put(mediaObject.getId(), mediaObject));
+    result.forEach(mediaObject -> resultMap.put(mediaObject.getMediaObjectId(), mediaObject));
     return resultMap;
   }
 

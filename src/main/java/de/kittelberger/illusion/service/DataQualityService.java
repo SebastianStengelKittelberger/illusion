@@ -3,7 +3,6 @@ package de.kittelberger.illusion.service;
 import de.kittelberger.illusion.data.LoadDataService;
 import de.kittelberger.illusion.model.DataQuality;
 import de.kittelberger.illusion.model.Product;
-import de.kittelberger.illusion.model.SkuMetaData;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;

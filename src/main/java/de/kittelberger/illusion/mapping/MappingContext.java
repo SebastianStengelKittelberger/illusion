@@ -1,6 +1,6 @@
 package de.kittelberger.illusion.mapping;
 
-import de.kittelberger.illusion.model.MediaObject;
+import de.kittelberger.illusion.model.Image;
 import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.SkuAttributes;
 
@@ -11,6 +11,6 @@ public record MappingContext(
   SkuAttributes skuAttributes,
   Product product,
   Locale locale,
-  Map<Long, MediaObject> mediaObjectMap,
+  Map<Long, Image> mediaObjectMap,
   String domain
 ) {}
