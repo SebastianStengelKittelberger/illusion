@@ -4,32 +4,33 @@ import de.kittelberger.illusion.model.Image;
 import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.Reference;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.core.JsonToken;
-import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 @Service
 public class LoadDataService {
 
-  private final RestClient restClient;
-  private final ObjectMapper objectMapper;
+  private final Optional<ElasticsearchProductLoadService> elasticsearchProductLoadService;
+  private final Optional<ElasticsearchReferenceLoadService> elasticsearchReferenceLoadService;
+  private final Optional<ElasticsearchMediaObjectLoadService> elasticsearchMediaObjectLoadService;
+  private final Optional<ElasticsearchConfigLoadService> elasticsearchConfigLoadService;
 
-  public LoadDataService(RestClient boschAdapterRestClient, ObjectMapper objectMapper) {
-    this.restClient = boschAdapterRestClient;
-    this.objectMapper = objectMapper;
+  public LoadDataService(
+    Optional<ElasticsearchProductLoadService> elasticsearchProductLoadService,
+    Optional<ElasticsearchReferenceLoadService> elasticsearchReferenceLoadService,
+    Optional<ElasticsearchMediaObjectLoadService> elasticsearchMediaObjectLoadService,
+    Optional<ElasticsearchConfigLoadService> elasticsearchConfigLoadService
+  ) {
+    this.elasticsearchProductLoadService = elasticsearchProductLoadService;
+    this.elasticsearchReferenceLoadService = elasticsearchReferenceLoadService;
+    this.elasticsearchMediaObjectLoadService = elasticsearchMediaObjectLoadService;
+    this.elasticsearchConfigLoadService = elasticsearchConfigLoadService;
   }
 
   public List<Product> getProducts(String country, String language) {
@@ -42,63 +43,32 @@ public class LoadDataService {
   }
 
   public void streamProducts(String country, String language, Predicate<Product> consumer) {
-    restClient.get()
-      .uri("{country}/{language}/products", country, language)
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange((request, response) -> {
-        if (response.getStatusCode().isError()) {
-          throw new IllegalStateException("Adapter request failed with status " + response.getStatusCode());
-        }
-
-        try (InputStream body = response.getBody();
-             var parser = objectMapper.createParser(body)) {
-          if (parser.nextToken() == null) {
-            return null;
-          }
-          if (parser.currentToken() != JsonToken.START_ARRAY) {
-            throw new IllegalStateException("Expected products array from adapter");
-          }
-
-          while (parser.nextToken() != JsonToken.END_ARRAY) {
-            Product product = objectMapper.readerFor(Product.class)
-              .without(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-              .readValue(parser);
-            if (!consumer.test(product)) {
-              break;
-            }
-          }
-          return null;
-        } catch (IOException e) {
-          throw new UncheckedIOException("Failed to stream products from adapter", e);
-        }
-      });
+    elasticsearchProductLoadService
+      .orElseThrow(() -> new IllegalStateException("Elasticsearch is not enabled — set elasticsearch.enabled=true"))
+      .streamProducts(country, language, consumer);
   }
 
   @Cacheable("references")
   public List<Reference> getReferences(String country, String language) {
-    return restClient.get()
-      .uri(country + "/" + language + "/references")
-      .retrieve()
-      .body(new ParameterizedTypeReference<>() {});
+    return elasticsearchReferenceLoadService
+      .orElseThrow(() -> new IllegalStateException("Elasticsearch is not enabled — set elasticsearch.enabled=true"))
+      .loadReferences(country, language);
   }
 
   @Cacheable("mediaObjects")
   public Map<Long, Image> getMediaObjects(String country, String lang) {
+    List<Image> images = elasticsearchMediaObjectLoadService
+      .orElseThrow(() -> new IllegalStateException("Elasticsearch is not enabled — set elasticsearch.enabled=true"))
+      .loadMediaObjects();
     Map<Long, Image> resultMap = new HashMap<>();
-    List<Image> result = restClient.get()
-      .uri(country + "/" + lang + "/media-objects", lang)
-      .retrieve()
-      .body(new ParameterizedTypeReference<>() {});
-    if (result == null) return resultMap;
-    result.forEach(mediaObject -> resultMap.put(mediaObject.getMediaObjectId(), mediaObject));
+    images.forEach(image -> resultMap.put(image.getMediaObjectId(), image));
     return resultMap;
   }
 
   @Cacheable("domain")
   public String getDomain(String country, String lang) {
-    return restClient.get()
-      .uri("/domain")
-      .retrieve()
-      .body(String.class);
+    return elasticsearchConfigLoadService
+      .orElseThrow(() -> new IllegalStateException("Elasticsearch is not enabled — set elasticsearch.enabled=true"))
+      .loadDomain();
   }
 }

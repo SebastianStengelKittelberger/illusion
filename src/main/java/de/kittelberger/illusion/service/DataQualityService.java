@@ -20,6 +20,10 @@ public class DataQualityService {
 
   public DataQuality getDataQuality(final String ukey, final String country, final String language) {
     List<Product> products = loadDataService.getProducts(country, language);
+    return getDataQuality(ukey, products);
+  }
+
+  public DataQuality getDataQuality(String ukey, List<Product> products) {
     int numberOfSkus = products.stream().mapToInt(product -> product.skuMetaData().size()).sum();
 
     List<String> skuWithoutUkey = products
@@ -33,8 +37,8 @@ public class DataQualityService {
       .flatMap(Collection::stream)
       .toList();
     return DataQuality.builder()
-      .percentage(((numberOfSkus - skuWithoutUkey.size()) * 100 / numberOfSkus) + "% haben den UKEY. Das sind " + (numberOfSkus - skuWithoutUkey.size()) + " von " +  numberOfSkus + " Skus.")
-      .SkusWithoutUkey(skuWithoutUkey)
+      .percentage(((numberOfSkus - skuWithoutUkey.size()) * 100 / numberOfSkus) + "% haben den UKEY. Das sind " + (numberOfSkus - skuWithoutUkey.size()) + " von " + numberOfSkus + " Skus.")
+      .skusWithoutUkey(skuWithoutUkey)
       .ukey(ukey)
       .build();
   }

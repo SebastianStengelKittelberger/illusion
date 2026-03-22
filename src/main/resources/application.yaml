@@ -5,11 +5,17 @@ spring:
     async:
       request-timeout: 1800000  # 30 minutes — for long-running streaming requests
 
-bosch:
-  adapter:
-    url: http://localhost:8082/adapter/
-
 server:
   servlet:
     context-path: /illusion
   port: 8079
+
+elasticsearch:
+  enabled: true          # set to true to activate Elasticsearch write-back
+  host: localhost
+  port: 9200
+  index-prefix: illusion          # index name pattern: {prefix}-{country}-{language}
+  product-index-prefix: bosch-products      # index to read raw products from (written by bosch.adapter)
+  reference-index-prefix: bosch-references  # index to read references from (written by bosch.adapter)
+  media-object-index: bosch-media-objects   # global, locale-independent
+  config-index: bosch-config                # global config values (domain etc.)

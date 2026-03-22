@@ -11,6 +11,6 @@ public class DataQuality {
 
   private String ukey;
   private String percentage;
-  private List<String> SkusWithoutUkey;
+  private List<String> skusWithoutUkey;
 
 }

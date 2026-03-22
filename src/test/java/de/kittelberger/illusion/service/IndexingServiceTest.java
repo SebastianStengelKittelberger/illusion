@@ -41,7 +41,7 @@ class IndexingServiceTest {
       new TextMappingHandler(),
       new JavaCodeMappingHandler(javaParserService)
     );
-    indexingService = new IndexingService(loadDataService, handlers);
+    indexingService = new IndexingService(loadDataService, handlers, java.util.Optional.empty());
   }
 
   // ---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ class IndexingServiceTest {
   void indexProduct_withNoProducts_returnsEmptyMap() {
     mockProducts();
 
-    List<Map<String, Pair<String, Object>>> result =
+    Map<String, Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(TITLE_SKU_CONFIG, NAME_PRODUCT_FALLBACK), "DE", "de");
 
     assertThat(result).isEmpty();
@@ -104,13 +104,13 @@ class IndexingServiceTest {
 
     mockProducts(product);
 
-    List<Map<String, Pair<String, Object>>> result =
+    Map<String, Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de");
 
     assertThat(result).hasSize(1);
-    assertThat(result.get(0)).containsKey("name");
-    assertThat(result.get(0).get("name").getLeft()).isEqualTo("STRING");
-    assertThat(result.get(0).get("name").getRight()).isEqualTo("PRO Screwdriver TX15 x 100 mm");
+    assertThat(result.get("SKU-001")).containsKey("name");
+    assertThat(result.get("SKU-001").get("name").getLeft()).isEqualTo("STRING");
+    assertThat(result.get("SKU-001").get("name").getRight()).isEqualTo("PRO Screwdriver TX15 x 100 mm");
   }
 
   @Test
@@ -120,10 +120,10 @@ class IndexingServiceTest {
 
     mockProducts(product);
 
-    List<Map<String, Pair<String, Object>>> result =
+    Map<String, Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de");
 
-    assertThat(result.get(0).get("name").getRight()).isEqualTo("Schraubendreher TX15 x 100 mm");
+    assertThat(result.get("SKU-001").get("name").getRight()).isEqualTo("Schraubendreher TX15 x 100 mm");
   }
 
   @Test
@@ -133,7 +133,7 @@ class IndexingServiceTest {
 
     mockProducts(product);
 
-    assertThat(indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de").get(0)).isEmpty();
+    assertThat(indexingService.indexProduct(List.of(TITLE_SKU_CONFIG), "DE", "de").get("SKU-001")).isNullOrEmpty();
   }
 
   @Test
@@ -142,10 +142,10 @@ class IndexingServiceTest {
 
     mockProducts(product);
 
-    List<Map<String, Pair<String, Object>>> result =
+    Map<String, Map<String, Pair<String, Object>>> result =
       indexingService.indexProduct(List.of(NAME_PRODUCT_FALLBACK), "DE", "de");
 
-    assertThat(result.get(0).get("name").getRight()).isEqualTo("Bohrmaschine XY");
+    assertThat(result.get("SKU-001").get("name").getRight()).isEqualTo("Bohrmaschine XY");
   }
 
   // ---------------------------------------------------------------------------
@@ -169,11 +169,11 @@ class IndexingServiceTest {
   }
 
   private static Product productWithSkuAttributes(List<Attribute> skuAttrs, List<Attribute> productAttrs) {
-    return new Product(new ProductMetaData("Product", 1L, "ART-001"), List.of(), productAttrs, Map.of("SKU-001", skuAttrs));
+    return new Product(new ProductMetaData("Product", 1L, "ART-001"), List.of(), productAttrs, Map.of("SKU-001", skuAttrs), List.of());
   }
 
   private static Product productWithName(String name) {
-    return new Product(new ProductMetaData(name, 1L, "ART-001"), List.of(), List.of(), Map.of());
+    return new Product(new ProductMetaData(name, 1L, "ART-001"), List.of(), List.of(), Map.of("SKU-001", List.of()), List.of());
   }
 
   private static MapConfig mapConfig(

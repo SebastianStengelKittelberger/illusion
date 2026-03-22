@@ -3,96 +3,90 @@ package de.kittelberger.illusion.data;
 import de.kittelberger.illusion.model.Attribute;
 import de.kittelberger.illusion.model.Image;
 import de.kittelberger.illusion.model.Product;
+import de.kittelberger.illusion.model.ProductMetaData;
 import de.kittelberger.illusion.model.Reference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-import tools.jackson.databind.ObjectMapper;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for {@link LoadDataService} using a mocked REST server.
+ * Unit tests for {@link LoadDataService} — all data is sourced from Elasticsearch.
  */
 class LoadDataServiceTest {
 
+  private ElasticsearchProductLoadService productLoadService;
+  private ElasticsearchReferenceLoadService referenceLoadService;
+  private ElasticsearchMediaObjectLoadService mediaObjectLoadService;
+  private ElasticsearchConfigLoadService configLoadService;
   private LoadDataService loadDataService;
-  private MockRestServiceServer mockServer;
 
   @BeforeEach
   void setUp() {
-    RestClient.Builder builder = RestClient.builder();
-    mockServer = MockRestServiceServer.bindTo(builder).build();
-    RestClient restClient = builder.baseUrl("http://localhost:8080").build();
-    loadDataService = new LoadDataService(restClient, new ObjectMapper());
+    productLoadService = mock(ElasticsearchProductLoadService.class);
+    referenceLoadService = mock(ElasticsearchReferenceLoadService.class);
+    mediaObjectLoadService = mock(ElasticsearchMediaObjectLoadService.class);
+    configLoadService = mock(ElasticsearchConfigLoadService.class);
+
+    loadDataService = new LoadDataService(
+      Optional.of(productLoadService),
+      Optional.of(referenceLoadService),
+      Optional.of(mediaObjectLoadService),
+      Optional.of(configLoadService)
+    );
   }
 
   // ---------------------------------------------------------------------------
-  // Products
+  // streamProducts / getProducts
   // ---------------------------------------------------------------------------
 
   @Test
-  void getProducts_deserializesProductList() {
-    mockServer.expect(requestTo("http://localhost:8080/DE/de/products"))
-      .andRespond(withSuccess(
-        """
-        [{"productMetaData":{"name":"Bohrmaschine","id":1,"artNo":"0601015200"},
-          "skuMetaData":[],
-          "productAttributes":[],
-          "skuAttributes":{}}]
-        """,
-        MediaType.APPLICATION_JSON
-      ));
+  void streamProducts_delegatesToEsService() {
+    doNothing().when(productLoadService).streamProducts(eq("DE"), eq("de"), any());
 
-    List<Product> products = loadDataService.getProducts("DE", "de");
+    loadDataService.streamProducts("DE", "de", p -> true);
 
-    assertThat(products).hasSize(1);
-    assertThat(products.getFirst().productMetaData().getName()).isEqualTo("Bohrmaschine");
-    assertThat(products.getFirst().productMetaData().getId()).isEqualTo(1L);
-    assertThat(products.getFirst().productMetaData().getArtNo()).isEqualTo("0601015200");
+    verify(productLoadService).streamProducts(eq("DE"), eq("de"), any());
   }
 
   @Test
-  void getProducts_returnsEmptyListOnEmptyResponse() {
-    mockServer.expect(requestTo("http://localhost:8080/DE/de/products"))
-      .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+  void getProducts_collectsAllProducts() {
+    Product product = new Product(
+      new ProductMetaData("Bohrmaschine", 1L, "0601015200"),
+      List.of(), List.of(), Map.of(), List.of()
+    );
 
-    assertThat(loadDataService.getProducts("DE", "de")).isEmpty();
+    doAnswer(inv -> {
+      @SuppressWarnings("unchecked")
+      Predicate<Product> consumer = inv.getArgument(2);
+      consumer.test(product);
+      return null;
+    }).when(productLoadService).streamProducts(eq("DE"), eq("de"), any());
+
+    List<Product> result = loadDataService.getProducts("DE", "de");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().productMetaData().getName()).isEqualTo("Bohrmaschine");
   }
 
   @Test
-  void getProducts_mapsSkuAttributes() {
-    mockServer.expect(requestTo("http://localhost:8080/DE/de/products"))
-      .andRespond(withSuccess(
-        """
-        [{"productMetaData":{"name":"Bohrmaschine","id":1,"artNo":"123"},
-          "skuMetaData":[],
-          "productAttributes":[],
-          "skuAttributes":{
-            "SKU-001":[
-              {"ukey":"TITLE","referenceIds":{"attrId":8},
-               "references":{"TEXT":"Bohrmaschine","BOOLEAN":false,"CLTEXT":"Bohrmaschine"}}
-            ]
-          }}]
-        """,
-        MediaType.APPLICATION_JSON
-      ));
+  void streamProducts_throwsWhenEsNotEnabled() {
+    LoadDataService noEs = new LoadDataService(
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+    );
 
-    List<Product> products = loadDataService.getProducts("DE", "de");
-
-    Map<String, List<Attribute>> skuAttrs = products.getFirst().skuAttributes();
-    assertThat(skuAttrs).hasSize(1);
-    List<Attribute> attrs = skuAttrs.get("SKU-001");
-    assertThat(attrs).hasSize(1);
-    assertThat(attrs.getFirst().getUkey()).isEqualTo("TITLE");
-    assertThat(attrs.getFirst().getReferences()).containsEntry("TEXT", "Bohrmaschine");
+    assertThatThrownBy(() -> noEs.streamProducts("DE", "de", p -> true))
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("elasticsearch.enabled=true");
   }
 
   // ---------------------------------------------------------------------------
@@ -100,20 +94,24 @@ class LoadDataServiceTest {
   // ---------------------------------------------------------------------------
 
   @Test
-  void getReferences_deserializesReferenceList() {
-    mockServer.expect(requestTo("http://localhost:8080/DE/de/references"))
-      .andRespond(withSuccess(
-        """
-        [{"id":8,"ukey":"TITLE","attrClasses":{"left":"TITLE","right":[]}}]
-        """,
-        MediaType.APPLICATION_JSON
-      ));
+  void getReferences_delegatesToEsService() {
+    Reference ref = mock(Reference.class);
+    when(referenceLoadService.loadReferences("DE", "de")).thenReturn(List.of(ref));
 
-    List<Reference> refs = loadDataService.getReferences("DE", "de");
+    List<Reference> result = loadDataService.getReferences("DE", "de");
 
-    assertThat(refs).hasSize(1);
-    assertThat(refs.getFirst().getId()).isEqualTo(8L);
-    assertThat(refs.getFirst().getUkey()).isEqualTo("TITLE");
+    assertThat(result).containsExactly(ref);
+    verify(referenceLoadService).loadReferences("DE", "de");
+  }
+
+  @Test
+  void getReferences_throwsWhenEsNotEnabled() {
+    LoadDataService noEs = new LoadDataService(
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+    );
+
+    assertThatThrownBy(() -> noEs.getReferences("DE", "de"))
+      .isInstanceOf(IllegalStateException.class);
   }
 
   // ---------------------------------------------------------------------------
@@ -121,17 +119,49 @@ class LoadDataServiceTest {
   // ---------------------------------------------------------------------------
 
   @Test
-  void getMediaObjects_deserializesMediaObjectList() {
-    mockServer.expect(requestTo("http://localhost:8080/de/de/media-objects"))
-      .andRespond(withSuccess(
-        """
-        [{"name":"image1.jpg","attributes":[],"references":{},"mediaSpecifics":[]}]
-        """,
-        MediaType.APPLICATION_JSON
-      ));
+  void getMediaObjects_indexedByMediaObjectId() {
+    Image image = mock(Image.class);
+    when(image.getMediaObjectId()).thenReturn(42L);
+    when(mediaObjectLoadService.loadMediaObjects()).thenReturn(List.of(image));
 
-    Map<Long, Image> mediaObjects = loadDataService.getMediaObjects("de", "de");
+    Map<Long, Image> result = loadDataService.getMediaObjects("DE", "de");
 
-    assertThat(mediaObjects).hasSize(1);
+    assertThat(result).containsKey(42L);
+    assertThat(result.get(42L)).isSameAs(image);
+  }
+
+  @Test
+  void getMediaObjects_throwsWhenEsNotEnabled() {
+    LoadDataService noEs = new LoadDataService(
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+    );
+
+    assertThatThrownBy(() -> noEs.getMediaObjects("DE", "de"))
+      .isInstanceOf(IllegalStateException.class);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Domain config
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void getDomain_delegatesToEsService() {
+    when(configLoadService.loadDomain()).thenReturn("bosch.de");
+
+    String result = loadDataService.getDomain("DE", "de");
+
+    assertThat(result).isEqualTo("bosch.de");
+    verify(configLoadService).loadDomain();
+  }
+
+  @Test
+  void getDomain_throwsWhenEsNotEnabled() {
+    LoadDataService noEs = new LoadDataService(
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+    );
+
+    assertThatThrownBy(() -> noEs.getDomain("DE", "de"))
+      .isInstanceOf(IllegalStateException.class);
   }
 }
+

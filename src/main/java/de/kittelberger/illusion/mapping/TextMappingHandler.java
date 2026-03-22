@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+import static de.kittelberger.illusion.util.AttributeUtil.extractText;
+
 @Component
 @Order(10)
 public class TextMappingHandler implements MappingHandler {
@@ -41,26 +43,19 @@ public class TextMappingHandler implements MappingHandler {
         } else {
           result.put(key, Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), value)));
         }
-        continue;
       }
 
-      ctx.skuAttributes().getFirstAttribute(key, ukey).ifPresent(attribute -> {
-        String value = extractText(attribute);
-        if (result.containsKey(key)) {
-          result.get(key).put(config.getTargetField(), Pair.of(config.getTargetFieldType(), value));
-        } else {
-          result.put(key, new HashMap<>(Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), value))));
-        }
-      });
+      else {
+        ctx.skuAttributes().getFirstAttribute(key, ukey).ifPresent(attribute -> {
+          String value = extractText(attribute);
+          if (result.containsKey(key)) {
+            result.get(key).put(config.getTargetField(), Pair.of(config.getTargetFieldType(), value));
+          } else {
+            result.put(key, new HashMap<>(Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), value))));
+          }
+        });
+      }
     }
   }
 
-  private static String extractText(Attribute attribute) {
-    if (attribute.getReferences() == null) return null;
-    Map<String, Object> values = attribute.getReferences();
-    Object cltext = values.get("CLTEXT");
-    if (cltext != null) return cltext.toString();
-    Object text = values.get("TEXT");
-    return text != null ? text.toString() : null;
-  }
 }

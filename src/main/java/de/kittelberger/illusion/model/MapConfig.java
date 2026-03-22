@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class MapConfig {
 
+  private ComplexMapping complexMapping;
   private DTOType dtoType;
   private String ukey;
   private String mappingType;

@@ -1,5 +1,6 @@
 package de.kittelberger.illusion.service;
 
+import de.kittelberger.illusion.data.ElasticsearchIndexService;
 import de.kittelberger.illusion.data.LoadDataService;
 import de.kittelberger.illusion.mapping.MappingContext;
 import de.kittelberger.illusion.mapping.MappingHandler;
@@ -8,23 +9,20 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 public class IndexingService {
 
   private final LoadDataService loadDataService;
   private final List<MappingHandler> mappingHandlers;
+  private final Optional<ElasticsearchIndexService> elasticsearchIndexService;
 
   @Value("${xml.product-limit:-1}")
   private int productLimit;
@@ -37,10 +35,12 @@ public class IndexingService {
 
   public IndexingService(
     final LoadDataService loadDataService,
-    final List<MappingHandler> mappingHandlers
+    final List<MappingHandler> mappingHandlers,
+    final Optional<ElasticsearchIndexService> elasticsearchIndexService
   ) {
     this.loadDataService = loadDataService;
     this.mappingHandlers = mappingHandlers;
+    this.elasticsearchIndexService = elasticsearchIndexService;
   }
 
   public Map<String, Map<String, Pair<String, Object>>> indexProduct(
@@ -103,6 +103,8 @@ public class IndexingService {
       }
     }
 
+    elasticsearchIndexService.ifPresent(es -> es.indexResults(results, country, language));
+
     return results;
   }
 
@@ -153,13 +155,14 @@ public class IndexingService {
     Map<String, Map<String, Pair<String, Object>>> productResult = new HashMap<>();
     MappingContext ctx = new MappingContext(
       new SkuAttributes(
-        product.skuAttributes() != null ? product.skuAttributes() : Map.of(),
-        product.productAttributes() != null ? product.productAttributes() : List.of()
+        product.skuAttributes(),
+        product.productAttributes()
       ),
       product,
       Locale.of(language, country.toUpperCase()),
       mediaObjects,
-      domain
+      domain,
+      loadDataService.getReferences(country, language)
     );
 
     skuMapConfigs.forEach(config ->
