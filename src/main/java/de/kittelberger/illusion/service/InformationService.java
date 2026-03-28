@@ -94,5 +94,15 @@ public class InformationService {
       .unmappedProductUkeys(unmappedProductUkeys)
       .build();
   }
+
+  public List<String> getSampleSkus(final String country, final String language, final int limit) {
+    return loadDataService.getProducts(country, language).stream()
+      .flatMap(p -> p.skuMetaData().stream())
+      .map(sku -> sku.getSku())
+      .filter(sku -> sku != null && !sku.isBlank())
+      .distinct()
+      .limit(limit)
+      .collect(Collectors.toList());
+  }
 }
 
