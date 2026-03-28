@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
+    container_name: illusion-es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  illusion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: illusion-app
+    ports:
+      - "8079:8079"
+    environment:
+      # Property key in application.yaml: elasticsearch.host / elasticsearch.port
+      # Spring Boot maps env vars: ELASTICSEARCH_HOST → elasticsearch.host
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - ELASTICSEARCH_ENABLED=true
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  moonlight:
+    build:
+      context: ../moonlight
+      dockerfile: Dockerfile
+    container_name: moonlight-app
+    ports:
+      - "8078:8078"
+    environment:
+      # Property key in application.yaml: elasticsearch.host / elasticsearch.port
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      illusion:
+        condition: service_started
+
+  # NOTE: Summerlight's API base URLs are hardcoded in src/api/client.ts:
+  #   - illusion:   http://localhost:8079/illusion
+  #   - moonlight:  http://localhost:8078/moonlight
+  # These point to localhost, which works when running 'npm run dev' locally but
+  # will fail when summerlight itself runs inside Docker (container can't reach
+  # the host's localhost). Two options:
+  #   A) Run only the backends via Docker Compose and run summerlight locally:
+  #        docker compose up elasticsearch illusion moonlight
+  #        cd summerlight && npm run dev
+  #   B) Rebuild summerlight with different API URLs by adding Vite env vars and
+  #      passing VITE_ILLUSION_URL / VITE_MOONLIGHT_URL as build args.
+  summerlight:
+    build:
+      context: ../summerlight
+      dockerfile: Dockerfile
+    container_name: summerlight-app
+    ports:
+      - "3000:80"
+    depends_on:
+      - illusion
+      - moonlight
+
+volumes:
+  es_data:
+    driver: local
