@@ -1,10 +1,12 @@
 package de.kittelberger.illusion.service;
 
 import de.kittelberger.illusion.data.LoadDataService;
+import de.kittelberger.illusion.model.Attribute;
 import de.kittelberger.illusion.model.DataQuality;
 import de.kittelberger.illusion.model.Product;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,27 @@ public class DataQualityService {
       .skusWithoutUkey(skuWithoutUkey)
       .ukey(ukey)
       .build();
+  }
+
+  public List<Map<String, String>> getSkuValues(String ukey, String country, String language) {
+    List<Product> products = loadDataService.getProducts(country, language);
+    List<Map<String, String>> result = new ArrayList<>();
+    for (Product product : products) {
+      for (Map.Entry<String, List<Attribute>> entry : product.skuAttributes().entrySet()) {
+        String sku = entry.getKey();
+        entry.getValue().stream()
+          .filter(attr -> attr.getUkey().equals(ukey))
+          .findFirst()
+          .ifPresent(attr -> {
+            String val = "";
+            if (attr.getReferences() != null && !attr.getReferences().isEmpty()) {
+              val = attr.getReferences().values().iterator().next().toString();
+            }
+            result.add(Map.of("sku", sku, "value", val));
+          });
+      }
+    }
+    return result;
   }
 
 }

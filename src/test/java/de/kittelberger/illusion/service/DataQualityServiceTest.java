@@ -128,6 +128,84 @@ class DataQualityServiceTest {
   }
 
   // ---------------------------------------------------------------------------
+  // getSkuValues tests
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void getSkuValues_skuWithMatchingUkeyAndTextReference_appearsInResult() {
+    Attribute attr = attrWithReference(UKEY, "Bohrmaschine");
+    Product product = product(List.of(skuMeta("SKU-001")), Map.of("SKU-001", List.of(attr)));
+    when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(product));
+
+    List<Map<String, String>> result = service.getSkuValues(UKEY, COUNTRY, LANGUAGE);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0)).containsEntry("sku", "SKU-001").containsEntry("value", "Bohrmaschine");
+  }
+
+  @Test
+  void getSkuValues_skuWithoutMatchingUkey_notInResult() {
+    Attribute attr = attrWithReference("COLOR", "red");
+    Product product = product(List.of(skuMeta("SKU-001")), Map.of("SKU-001", List.of(attr)));
+    when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(product));
+
+    List<Map<String, String>> result = service.getSkuValues(UKEY, COUNTRY, LANGUAGE);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void getSkuValues_emptyProductList_returnsEmptyList() {
+    when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of());
+
+    List<Map<String, String>> result = service.getSkuValues(UKEY, COUNTRY, LANGUAGE);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void getSkuValues_multipleProducts_aggregatesAllMatchingSkus() {
+    Product p1 = product(List.of(skuMeta("SKU-A")), Map.of("SKU-A", List.of(attrWithReference(UKEY, "ValueA"))));
+    Product p2 = product(List.of(skuMeta("SKU-B")), Map.of("SKU-B", List.of(attrWithReference(UKEY, "ValueB"))));
+    when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(p1, p2));
+
+    List<Map<String, String>> result = service.getSkuValues(UKEY, COUNTRY, LANGUAGE);
+
+    assertThat(result).hasSize(2);
+    assertThat(result).anySatisfy(m -> assertThat(m).containsEntry("sku", "SKU-A").containsEntry("value", "ValueA"));
+    assertThat(result).anySatisfy(m -> assertThat(m).containsEntry("sku", "SKU-B").containsEntry("value", "ValueB"));
+  }
+
+  @Test
+  void getSkuValues_attributeWithNullReferences_usesEmptyStringAsValue() {
+    Attribute attr = attr(UKEY); // references not set → null
+    Product product = product(List.of(skuMeta("SKU-001")), Map.of("SKU-001", List.of(attr)));
+    when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(product));
+
+    List<Map<String, String>> result = service.getSkuValues(UKEY, COUNTRY, LANGUAGE);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0)).containsEntry("sku", "SKU-001").containsEntry("value", "");
+  }
+
+  @Test
+  void getSkuValues_mixedSkus_onlyMatchingSkusInResult() {
+    Product product = product(
+      List.of(skuMeta("SKU-001"), skuMeta("SKU-002")),
+      Map.of(
+        "SKU-001", List.of(attrWithReference(UKEY, "Title A")),
+        "SKU-002", List.of(attrWithReference("COLOR", "red"))
+      )
+    );
+    when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(product));
+
+    List<Map<String, String>> result = service.getSkuValues(UKEY, COUNTRY, LANGUAGE);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0)).containsEntry("sku", "SKU-001");
+  }
+
+  // ---------------------------------------------------------------------------
   // Test data builders
   // ---------------------------------------------------------------------------
 
@@ -144,6 +222,15 @@ class DataQualityServiceTest {
   private static Attribute attr(String ukey) {
     Attribute a = new Attribute();
     a.setUkey(ukey);
+    return a;
+  }
+
+  private static Attribute attrWithReference(String ukey, String textValue) {
+    Attribute a = new Attribute();
+    a.setUkey(ukey);
+    Map<String, Object> refs = new java.util.HashMap<>();
+    refs.put("TEXT", textValue);
+    a.setReferences(refs);
     return a;
   }
 }

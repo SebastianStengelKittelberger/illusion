@@ -3,7 +3,6 @@ package de.kittelberger.illusion.service;
 import de.kittelberger.illusion.data.LoadDataService;
 import de.kittelberger.illusion.model.Attribute;
 import de.kittelberger.illusion.model.Information;
-import de.kittelberger.illusion.model.InformationRequestData;
 import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.ProductMetaData;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,18 +14,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InformationServiceTest {
-
-  @Mock
-  private IndexingService indexingService;
 
   @Mock
   private LoadDataService loadDataService;
@@ -41,8 +37,7 @@ class InformationServiceTest {
 
   @BeforeEach
   void setUp() {
-    service = new InformationService(indexingService, loadDataService, dataQualityService);
-    when(indexingService.indexProduct(anyList(), anyString(), anyString())).thenReturn(Map.of());
+    service = new InformationService(loadDataService, dataQualityService, Optional.empty());
   }
 
   // ---------------------------------------------------------------------------
@@ -54,7 +49,7 @@ class InformationServiceTest {
     Product p = product(List.of(attr("TITLE"), attr("BRAND")), Map.of());
     when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(p));
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     assertThat(result.getProductUkeys()).containsExactlyInAnyOrder("TITLE", "BRAND");
   }
@@ -64,7 +59,7 @@ class InformationServiceTest {
     Product p = product(List.of(), Map.of("SKU-001", List.of(attr("COLOR"), attr("SIZE"))));
     when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(p));
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     assertThat(result.getSkuUkeys()).containsExactlyInAnyOrder("COLOR", "SIZE");
   }
@@ -81,7 +76,7 @@ class InformationServiceTest {
     Product p = product(attrs, Map.of());
     when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(p));
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     assertThat(result.getProductAttributes()).hasSizeLessThanOrEqualTo(10);
   }
@@ -93,7 +88,7 @@ class InformationServiceTest {
     Product p = product(List.of(), Map.of("SKU-001", attrs));
     when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(p));
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     assertThat(result.getSkuAttributes()).hasSizeLessThanOrEqualTo(10);
   }
@@ -105,7 +100,7 @@ class InformationServiceTest {
     Product p2 = product(List.of(attr("TITLE"), attr("COLOR")), Map.of());
     when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(p1, p2));
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     long titleCount = result.getProductAttributes().stream()
       .filter(a -> "TITLE".equals(a.getUkey())).count();
@@ -120,7 +115,7 @@ class InformationServiceTest {
     Product p3 = product(List.of(attr("COMMON")), Map.of());
     when(loadDataService.getProducts(COUNTRY, LANGUAGE)).thenReturn(List.of(p1, p2, p3));
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     List<String> ukeys = result.getProductAttributes().stream()
       .map(Attribute::getUkey).toList();
@@ -140,7 +135,7 @@ class InformationServiceTest {
       .ukey("COLOR").percentage("100%").skusWithoutUkey(List.of()).build();
     when(dataQualityService.getDataQuality(anyString(), anyList())).thenReturn(dq);
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     assertThat(result.getDataQualitySkus()).isNotEmpty();
   }
@@ -157,7 +152,7 @@ class InformationServiceTest {
       .ukey("ANY").percentage("50%").skusWithoutUkey(List.of()).build();
     when(dataQualityService.getDataQuality(anyString(), anyList())).thenReturn(dq);
 
-    Information result = service.loadInformation(COUNTRY, LANGUAGE, requestData());
+    Information result = service.loadInformation(COUNTRY, LANGUAGE);
 
     assertThat(result.getDataQualitySkus()).hasSizeLessThanOrEqualTo(10);
   }
@@ -174,11 +169,5 @@ class InformationServiceTest {
     Attribute a = new Attribute();
     a.setUkey(ukey);
     return a;
-  }
-
-  private static InformationRequestData requestData() {
-    InformationRequestData data = new InformationRequestData();
-    data.setMapConfigs(List.of());
-    return data;
   }
 }
