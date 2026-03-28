@@ -1,41 +1,41 @@
 package de.kittelberger.illusion.service;
 
+import de.kittelberger.illusion.data.ElasticsearchMappingConfigService;
 import de.kittelberger.illusion.data.LoadDataService;
 import de.kittelberger.illusion.model.*;
-import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class InformationService {
 
-  private final IndexingService indexingService;
   private final LoadDataService loadDataService;
   private final DataQualityService dataQualityService;
+  private final Optional<ElasticsearchMappingConfigService> mappingConfigService;
 
   public InformationService(
-    final IndexingService indexingService,
     final LoadDataService loadDataService,
-    final DataQualityService dataQualityService
+    final DataQualityService dataQualityService,
+    final Optional<ElasticsearchMappingConfigService> mappingConfigService
   ) {
-    this.indexingService = indexingService;
     this.loadDataService = loadDataService;
     this.dataQualityService = dataQualityService;
+    this.mappingConfigService = mappingConfigService;
   }
 
+  @Cacheable("information")
   public Information loadInformation(
     final String country,
-    final String language,
-    final InformationRequestData data
+    final String language
   ) {
-//    TODO: Das sollte auch nicht über den Service laufen, sondern von zentraler Stelle wie zB ElasticSearch geladen werden. Das ist verschwendete Performance. Aber leicht umzusetzen, also mein Freund gerade
-    Map<String, Map<String, Pair<String, Object>>> mappedData = indexingService.indexProduct(data.getMapConfigs(), country, language);
     List<Product> products = loadDataService.getProducts(country, language);
 
     List<Attribute> productAttributes = products.stream().flatMap(p -> p.productAttributes().stream()).toList();
@@ -50,6 +50,18 @@ public class InformationService {
 
     Set<String> productUkeys = productUkeyFrequency.keySet();
     Set<String> skuUkeys = skuUkeyFrequency.keySet();
+
+    // Split into mapped / unmapped based on current MappingConfig
+    Set<String> configuredUkeys = mappingConfigService
+      .map(svc -> svc.loadLatest(country, language).stream()
+        .map(MapConfig::getUkey)
+        .collect(Collectors.toSet()))
+      .orElseGet(Set::of);
+
+    Set<String> mappedSkuUkeys     = skuUkeys.stream().filter(configuredUkeys::contains).collect(Collectors.toSet());
+    Set<String> unmappedSkuUkeys   = skuUkeys.stream().filter(u -> !configuredUkeys.contains(u)).collect(Collectors.toSet());
+    Set<String> mappedProductUkeys   = productUkeys.stream().filter(configuredUkeys::contains).collect(Collectors.toSet());
+    Set<String> unmappedProductUkeys = productUkeys.stream().filter(u -> !configuredUkeys.contains(u)).collect(Collectors.toSet());
 
     Set<String> seenProductUkeys = new HashSet<>();
     List<Attribute> uniqueProductAttributes = productAttributes.stream()
@@ -76,6 +88,11 @@ public class InformationService {
       .skuAttributes(uniqueSkuAttributes)
       .productUkeys(productUkeys)
       .skuUkeys(skuUkeys)
+      .mappedSkuUkeys(mappedSkuUkeys)
+      .unmappedSkuUkeys(unmappedSkuUkeys)
+      .mappedProductUkeys(mappedProductUkeys)
+      .unmappedProductUkeys(unmappedProductUkeys)
       .build();
   }
 }
+

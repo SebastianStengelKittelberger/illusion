@@ -1,7 +1,7 @@
 # Illusion – Implementierungsstand
 
 > Übersicht über alle Ideen aus den Konzept-Dokumenten und ihren aktuellen Umsetzungsstand.
-> Stand: März 2026
+> Stand: 27. März 2026 (nach UI-Session mit Summernight)
 
 ---
 
@@ -34,8 +34,8 @@
 | Datenqualitäts-Prüfung | ✅ | `DataQualityService`, `DataQualityController` |
 | REST API Endpoints | ✅ | `IndexController`, `InformationController`, `DataQualityController` |
 | ProductType + ObjAttr Modell | ✅ | inkl. AttrClass, AttrClassRef |
-| Pflegeoberfläche (UI) | ❌ | POC – nicht Teil des aktuellen Scopes |
-| Template-Engine / Webseiten-Generierung | ❌ | POC – nur Datentransformation |
+| Pflegeoberfläche (UI) | ✅ | **Summernight** – React/TS/Vite SPA auf Port 5175, kommuniziert mit Illusion (8079) & Moonlight (8078) |
+| Template-Engine / Webseiten-Generierung | 🚧 | **Moonlight** – Thymeleaf-basiert, Slot-System, läuft auf Port 8078 |
 
 ---
 
@@ -110,18 +110,59 @@
 
 | Idee | Status | Anmerkung |
 |------|--------|-----------|
-| Versionierung der Konfiguration | 💡 | `Environment`-Enum in MapConfig empfohlen |
+| MappingConfig in Elasticsearch speichern | ✅ | `ElasticsearchMappingConfigService`, Index `illusion-mapping-config`, versioniert per Timestamp |
+| MappingConfig REST API | ✅ | `MappingConfigController` GET/PUT `/{country}/{language}/mapping-config` |
+| CORS für UI | ✅ | `WebConfig.java` – erlaubt `http://localhost:*` |
+| Ukeys in mapped/unmapped aufteilen | ✅ | `InformationService` lädt MappingConfig und splittet in `mappedSkuUkeys`, `unmappedSkuUkeys`, `mappedProductUkeys`, `unmappedProductUkeys` |
+| InformationController als GET | ✅ | Kein Request-Body mehr nötig |
+| Ergebnis cachen | ✅ | `@Cacheable("information")` – In-Memory per Country/Language |
+
+---
+
+## Summernight – Pflege-UI (separates Projekt)
+
+> Pfad: `/Users/sebastianstengel/work/summernight` | Port: 5175 (Vite Dev)  
+> Start: `cd /Users/sebastianstengel/work/summernight && npm run dev`
+
+### Screens
+
+| Screen | Route | Status | Beschreibung |
+|--------|-------|--------|--------------|
+| Ukey-Explorer | `/ukeys` | ✅ | Zwei-Spalten-Grid (Nicht gemappt / Gemappt), SKU + PRODUCT getrennt, scrollbar |
+| Mapping Config Liste | `/configs` | ✅ | CRUD-Tabelle, Import/Export JSON, „Alle anwenden" |
+| Mapping Config Editor | `/editor` | ✅ | Formular mit bedingten Feldern, Monaco für JAVA_CODE, Toast-Feedback |
+| Template Editor | `/templates` | ✅ | Monaco HTML-Editor, Ukey-Sidebar (mapped/unmapped), Drag & Drop, QuickMapModal, neuer Slot |
+
+### Features
+
+| Feature | Status | Anmerkung |
+|---------|--------|-----------|
+| Country/Language Selector | ✅ | Global im Header, steuert alle Requests |
+| Zustand-Store (Zustand) | ✅ | Country, Language, Configs, Toast |
+| Toast-Benachrichtigungen | ✅ | Grün/Rot, auto-dismiss nach 3,5s |
+| Drag & Drop Ukeys → Monaco | ✅ | Capture-Phase-Listener verhindert Monaco-Konflikt (kein „/" und „0") |
+| Clipboard-Copy (SKU/PRD) | ✅ | Hover-Buttons pro Ukey, grünes ✓ als Feedback |
+| QuickMapModal | ✅ | Popup beim Klick/Drag auf nicht gemappten Ukey – speichert direkt in MappingConfig |
+| Neues Template anlegen | ✅ | `+`-Button neben Slot-Tabs, Inline-Input |
+| Scrollbare Ukey-Sidebar | ✅ | Bounded an Editor-Höhe (`overflow-hidden`, `h-full`) |
+
+### Offene Punkte
+
+| Feature | Status | Anmerkung |
+|---------|--------|-----------|
+| Datenqualitäts-Screen | 📋 | Backend vorhanden (`/dataQuality/{ukey}/`), kein Frontend-Screen |
+| Cache invalidieren nach MappingConfig-Änderung | 📋 | Aktuell: Cache läuft bis Illusion-Neustart |
+| Moonlight-Rendering nutzt gespeicherte Templates | 📋 | `TemplateStorageService` schreibt in ES, Render-Service liest noch Classpath |
+
+
 | Sandbox / Staging-Umgebung | 💡 | `DRAFT → STAGING → PRODUCTION` Pipeline konzipiert |
 | 4-Augen-Prinzip für Promotion | 💡 | |
 | Low-Code Transformationen im UI | 💡 | |
 | API-Gateway Funktion | 💡 | |
-| Kafka-Integration | 💡 | Eventgetrieben, für hohe Änderungsvolumen |
-| Kubernetes / Cloud-native | 📋 | Architektur passt, `@ConditionalOnProperty` vorhanden |
 | Health Endpoints (Actuator) | 📋 | Spring Boot gibt das fast geschenkt |
 | Distributed Caching (Redis) | 📋 | Aktuell In-Memory-Cache (`@Cacheable`) |
 | Distributed Tracing (Zipkin/Jaeger) | 💡 | |
 | Docker Compose für lokalen Start | 💡 | |
-| OpenAPI/Swagger | 💡 | |
 | Webhooks | 💡 | |
 | DSGVO-Konformität / Audit-Log | 💡 | |
 
@@ -146,8 +187,8 @@
 ## Was als nächstes sinnvoll wäre (📋 Quick Wins)
 
 1. **Filter** – nach AttrClass, Kategorie, ProductType; Grundlage für Facetten-Suche
-2. **Actuator Health Endpoint** – 1 Zeile in `application.yaml`, sofort Kubernetes-ready
-3. **OpenAPI/Swagger** – 1 Dependency, alle Endpoints automatisch dokumentiert
+2. **Moonlight: direkt aus ES laden** – aktuell lädt jeder Seitenaufruf alle Produkte
+3. **Actuator Health Endpoint** – 1 Zeile in `application.yaml`, sofort Monitoring-ready
 4. **`Environment`-Feld in MapConfig** – Vorbereitung für Draft/Staging/Production Pipeline
 5. **Redis statt In-Memory Cache** – ermöglicht horizontales Skalieren
 6. **Datenqualitäts-Dashboard Frontend** – Backend ist bereits vorhanden
@@ -196,7 +237,9 @@ bosch.adapter → [ES] → illusion (Mapping) → [ES] → moonlight (Rendering)
 
 | Feature | Status | Anmerkung |
 |---------|--------|-----------|
-| Direkt aus ES laden (nicht alle SKUs) | 📋 | TODO im Code: „Kompletter Overkill an Ressourcen" |
+| Moonlight: direkt aus ES laden (nicht alle SKUs) | 📋 | TODO im Code: „Kompletter Overkill an Ressourcen" |
+| Moonlight: Templates in ES gespeichert | ✅ | `TemplateStorageService` schreibt/liest aus `moonlight-slot-templates` + `moonlight-template-config` |
+| Moonlight: Render-Service nutzt ES-Templates | 📋 | Aktuell noch Classpath-Fallback aktiv |
 | Dynamische Konfig-Auswahl (nach Land/Sprache/Produkttyp) | 📋 | Aktuell hardcoded `"example"` |
 | Java-Code-Ausführung in MapConfig | 📋 | `javaCode`-Feld vorhanden, wird nicht ausgeführt |
 | Fehlerbehandlung | 📋 | Kein Exception Handling im Controller |

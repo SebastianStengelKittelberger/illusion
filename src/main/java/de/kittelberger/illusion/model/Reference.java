@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 public class Reference {
   private Long id;
   private String ukey;
+  private String name;
   private AttrClassRef attrClasses;
 }
