@@ -1,18 +1,64 @@
 # Getting Started
 
-### Übersicht
-Die Anwendung soll es ermöglichen ein Mapping von Produktdaten aufgrund einer Konfig zu machen, welche aus einer Oberfläche stammen soll.
-Dadurch kann der Kunde ohne Programmierkenntnisse die Webseite pflegen. Ergänzt werden sollte noch eine ähnliche Anwendung, die auf Basis der gemappten Daten
-eine Webseite generiert.
-Alle Kundenspezifischen Daten sollten aus dem Adapter kommen. Hier wird eine einheitliche Datanstruktur verwendet, die für alle Kunden gelten soll.
+## Übersicht
 
-### Stand
-Dies ist nur ein POC. Entsprechend ist hier vieles vereinfacht oder nur angedeutet. Die Produktdaten sollen aus dem Adapter kommen, aber wohl nicht durch einen Reequest,
-sondern über eine Datenbank/Kafka etc.
-Noch offen:
-- Pflegeoberfläche (nur grob andeuten, da OD das vermutlich besser kann)
-- Modulieren der Daten unabhängig von UKEYs, wie zum Beispiel ein DeliveryScope etc.
-- Königsklasse: Ein Weg für die technischen Daten.
-- Kategorienmapping
-- Mehrere Ukeys in eine Liste mappen
-- Templateanwendung (nur ganz grobe Skizze, da OD das vermutlich besser kann), aber mal eine Stage darstellen sollte gehen
+**illusion** ist ein datengetriebenes Content-Management-System für Produktkataloge.
+Es bildet beliebige Datenquellen (Produktdatenbanken, APIs, ERP) über eine konfigurierbare
+Mapping-Engine auf Webseiten-Templates ab – ohne Programmierkenntnisse für die tägliche Pflege.
+
+## Systemarchitektur
+
+```
+bosch.adapter  →  [ES: Rohdaten]  →  illusion  →  [ES: gemappte Daten]  →  moonlight  →  HTML
+                                         ↕
+                                    summerlight (UI)
+```
+
+| Dienst | Port | Beschreibung |
+|--------|------|--------------|
+| **illusion** | 8079 | Mapping-Engine, REST API, Indexierung |
+| **moonlight** | 8078 | Thymeleaf Template-Engine, HTML-Rendering |
+| **summerlight** | 5175 | React/TS Pflege-UI |
+| **Elasticsearch** | 9200 | Persistenz für alle Dienste |
+
+## Start
+
+```bash
+# Elasticsearch
+cd ~/work/elasticsearch-9.3.1 && bin/elasticsearch
+
+# illusion
+cd ~/work/illusion && ./mvnw spring-boot:run
+
+# moonlight (IntelliJ oder)
+cd ~/work/moonlight && ./mvnw spring-boot:run
+
+# summerlight
+cd ~/work/summerlight && npm run dev
+```
+
+## ES-Indizes
+
+| Index | Inhalt |
+|-------|--------|
+| `illusion-{land}-{sprache}` | Gemappte Produktdaten |
+| `illusion-mapping-config` | MappingConfig-Versionen pro Land/Sprache |
+| `bosch-products`, `bosch-references` etc. | Rohdaten vom Adapter |
+| `moonlight-vorlagen` | Globale HTML-Slot-Templates |
+| `moonlight-pages` | Seitenkonfigurationen (Slots) |
+| `moonlight-labels` | Übersetzungs-Labels pro Land/Sprache |
+
+## Stand
+
+Dies ist ein POC. Entsprechend ist hier vieles vereinfacht oder nur angedeutet.
+
+Noch offen / langfristig:
+- Datenqualitäts-Dashboard Frontend
+- Filter nach AttrClass/Kategorie/ProductType
+- Draft → Staging → Production Pipeline
+- Generic Adapter Wizard (kein Custom-Code nötig)
+- Variantenmanagement
+- SEO-Felder, Sitemap
+
+Vollständigen Implementierungsstand: siehe `IMPLEMENTIERUNGSSTAND.md`
+

@@ -3,6 +3,7 @@ package de.kittelberger.illusion.mapping;
 import de.kittelberger.illusion.model.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -13,7 +14,7 @@ public class ComplexMappingHandler implements MappingHandler{
 
   @Override
   public boolean supports(MapConfig config) {
-    return config.getComplexMapping() != null;
+    return config.getComplexMapping() != null && !CollectionUtils.isEmpty(config.getComplexMapping().getReferencedAttrClasses());
   }
 
   @Override
