@@ -17,8 +17,8 @@ bosch.adapter  →  [ES: Rohdaten]  →  illusion  →  [ES: gemappte Daten]  �
 | Dienst | Port | Beschreibung |
 |--------|------|--------------|
 | **illusion** | 8079 | Mapping-Engine, REST API, Indexierung |
-| **moonlight** | 8078 | Thymeleaf Template-Engine, HTML-Rendering |
-| **summerlight** | 5175 | React/TS Pflege-UI |
+| **moonlight** | 8078 | Thymeleaf Template-Engine, HTML-Rendering, URL-Routing |
+| **summerlight** | 5173 | React/TS Pflege-UI |
 | **Elasticsearch** | 9200 | Persistenz für alle Dienste |
 
 ## Start
@@ -45,20 +45,44 @@ cd ~/work/summerlight && npm run dev
 | `illusion-mapping-config` | MappingConfig-Versionen pro Land/Sprache |
 | `bosch-products`, `bosch-references` etc. | Rohdaten vom Adapter |
 | `moonlight-vorlagen` | Globale HTML-Slot-Templates |
-| `moonlight-pages` | Seitenkonfigurationen (Slots) |
-| `moonlight-labels` | Übersetzungs-Labels pro Land/Sprache |
+| `moonlight-vorlagen-history` | Versionshistorie pro Vorlage |
+| `moonlight-pages` | Seitenkonfigurationen (Slots) pro Country/Language |
+| `moonlight-labels` | Übersetzungs-Labels pro Country/Language |
+| `moonlight-routes` | URL-Routing-Tabellen pro Country/Language |
+
+## Summerlight – Bereiche
+
+| Route | Beschreibung |
+|-------|--------------|
+| `/ukeys` | UKeys erkunden, gemappt vs. ungemappt |
+| `/configs` | Mapping-Regeln verwalten (CRUD, Import/Export) |
+| `/editor` | Mapping-Config im Detail bearbeiten |
+| `/templates` | HTML-Vorlagen + Seiten + Visual Edit Mode |
+| `/routing` | URL-Routing-Tabelle pflegen |
+| `/quality` | Datenqualitäts-Dashboard |
+
+## Moonlight – Wichtige Endpoints
+
+| Endpoint | Beschreibung |
+|----------|--------------|
+| `GET /{country}/{language}/product-{sku}?page=&editMode=` | Produktseite rendern |
+| `GET /{country}/{language}/**` | Catch-All: URL aus Routing-Tabelle rendern |
+| `GET/PUT /{country}/{language}/routes` | URL-Routing-Tabelle lesen/speichern |
+| `GET/PUT /{country}/{language}/page/{name}` | Seitenkonfiguration |
+| `GET/PUT /{country}/{language}/labels` | Labels |
+| `GET/PUT /vorlage/{name}` | HTML-Vorlage lesen/speichern |
 
 ## Stand
 
-Dies ist ein POC. Entsprechend ist hier vieles vereinfacht oder nur angedeutet.
+Vollständigen Implementierungsstand: siehe `IMPLEMENTIERUNGSSTAND.md`
 
 Noch offen / langfristig:
-- Datenqualitäts-Dashboard Frontend
-- Filter nach AttrClass/Kategorie/ProductType
+- Authentifizierung / Zugriffsschutz
 - Draft → Staging → Production Pipeline
 - Generic Adapter Wizard (kein Custom-Code nötig)
+- Dynamisches Produkttyp-Routing
 - Variantenmanagement
 - SEO-Felder, Sitemap
+- Redis Cache für horizontales Skalieren
 
-Vollständigen Implementierungsstand: siehe `IMPLEMENTIERUNGSSTAND.md`
 

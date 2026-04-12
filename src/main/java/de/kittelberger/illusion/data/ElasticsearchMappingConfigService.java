@@ -2,15 +2,14 @@ package de.kittelberger.illusion.data;
 
 import de.kittelberger.illusion.model.MapConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
 import java.util.List;
@@ -31,14 +30,8 @@ public class ElasticsearchMappingConfigService {
   private final RestClient esHttpClient;
   private final ObjectMapper objectMapper;
 
-  public ElasticsearchMappingConfigService(
-    ObjectMapper objectMapper,
-    @Value("${elasticsearch.host:localhost}") String host,
-    @Value("${elasticsearch.port:9200}") int port
-  ) {
-    this.esHttpClient = RestClient.builder()
-      .baseUrl("http://" + host + ":" + port)
-      .build();
+  public ElasticsearchMappingConfigService(ObjectMapper objectMapper, RestClient elasticsearchRestClient) {
+    this.esHttpClient = elasticsearchRestClient;
     this.objectMapper = objectMapper;
   }
 

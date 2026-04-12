@@ -41,7 +41,8 @@ class IndexingServiceTest {
       new TextMappingHandler(),
       new JavaCodeMappingHandler(javaParserService)
     );
-    indexingService = new IndexingService(loadDataService, handlers, java.util.Optional.empty());
+    FilterIndexContributor filterIndexContributor = new FilterIndexContributor(javaParserService);
+    indexingService = new IndexingService(loadDataService, handlers, java.util.Optional.empty(), filterIndexContributor);
   }
 
   // ---------------------------------------------------------------------------

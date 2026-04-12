@@ -1,4 +1,156 @@
-# Visual Editor — Idee & Umsetzungsplan
+# Visual Editor — Implementierung
+
+Ziel: Im Template-Editor kann der Nutzer in der Preview auf einen gerenderten Wert klicken
+(z.B. "220V") und den zugrunde liegenden UKey ändern — ohne den HTML-Code zu sehen.
+
+**Status: ✅ Vollständig implementiert**
+
+---
+
+## User Story
+
+> Als Redakteur möchte ich in der Preview auf einen Produktwert klicken und den
+> zugehörigen UKey direkt austauschen können, ohne HTML schreiben zu müssen.
+
+---
+
+## Technischer Ablauf
+
+### Schritt 1 — Moonlight: Edit-Mode-Rendering
+
+Query-Parameter `?editMode=true` am `ProductController`-Endpoint.
+
+`RenderService.replaceSkuAttributeCalls()` annotiert alle `$skuAttr(UKEY)$`-Tokens
+mit `data-illusion-*` Attributen:
+
+**Standalone-Tokens** (erzeugen ein `<span>`):
+```html
+<span data-illusion-ukey="VOLTAGE"
+      data-illusion-type="SKU"
+      data-illusion-index="0"
+      data-illusion-vorlage="stage-produktseite"
+      data-illusion-fieldtype="TEXT"
+      th:text="${skuVoltage}"
+      th:classappend="'illusion-editable'">
+</span>
+```
+
+**Attribut-Tokens** (`th:text`, `th:src` u.a.) — Daten-Attribute werden in das öffnende Tag injiziert:
+```html
+<span data-illusion-ukey="VOLTAGE"
+      data-illusion-index="0"
+      th:text="${skuVoltage}">
+</span>
+```
+
+**Bild-Tokens** (`th:src` auf `<img>`):
+```html
+<img data-illusion-ukey="PRODIMG"
+     data-illusion-fieldtype="IMAGE"
+     data-illusion-index="0"
+     th:src="${skuProdimg}" />
+```
+
+Highlight-CSS wird in `<head>` injiziert:
+```css
+[data-illusion-ukey] {
+  outline: 2px dashed #6366f1;
+  cursor: pointer;
+}
+[data-illusion-ukey]:empty {
+  display: inline-block;
+  min-width: 80px;
+  min-height: 1.2em;
+}
+[data-illusion-ukey]:empty::before {
+  content: attr(data-illusion-ukey); /* zeigt UKey-Name als Platzhalter */
+}
+```
+
+Per-Slot-Zähler (`ukeyCounters`) sichern korrekte `data-illusion-index`-Werte
+auch wenn ein UKey mehrfach in derselben Vorlage vorkommt.
+
+### Schritt 2 — Summerlight: srcdoc-Iframe
+
+Das HTML wird von Summerlight gefetcht, ein Click-Handler-Script injiziert
+und per `srcdoc` geladen (kein Cross-Origin-Problem):
+
+```ts
+const html = await fetch(
+  `http://localhost:8078/moonlight/${country}/${language}/product-${sku}?page=${page}&editMode=true`
+).then(r => r.text());
+iframeRef.current!.srcdoc = injectEditScript(html);
+```
+
+Der injizierte Script läuft im Capture-Phase (`addEventListener(..., true)`) und
+nutzt `stopImmediatePropagation()`, um Konflikte mit Page-Handlern zu verhindern.
+
+### Schritt 3 — postMessage → UKey-Picker Modal
+
+`window.parent.postMessage` sendet beim Klick:
+```ts
+{
+  type: 'illusion-ukey-click',
+  ukey: 'VOLTAGE',
+  dtype: 'SKU',
+  index: 0,
+  vorlage: 'stage-produktseite',
+  fieldtype: 'TEXT',
+  currentValue: '220V'
+}
+```
+
+Ein Modal öffnet sich mit:
+- Aktueller Wert / Bild-Thumbnail
+- Gemappt/Unmapped-Badge
+- Durchsuchbare UKey-Liste
+- Bei unmapped: Warnung + „Mapping erstellen"-Button
+- „➕ Neues Mapping" Footer-Button
+
+### Schritt 4 — Template patchen & speichern
+
+Der neue UKey ersetzt den alten im Vorlage-Source:
+
+```ts
+const patched = html.replace(
+  /\$(skuAttr|productAttr)\(([^)]+)\)\$\.(\w+\(\))/g,
+  (match, fn, ukey, method) => {
+    if (ukey === oldUkey && count++ === index) {
+      return `$${fn}(${newUkey})$.${method}`;
+    }
+    return match;
+  }
+);
+await saveVorlage(vorlageName, patched);
+```
+
+Nach dem Speichern wird die aktive Vorlage im Editor aktualisiert
+und die Edit-Preview automatisch neu geladen.
+
+### Schritt 5 — Quick-Mapping aus Edit Mode
+
+Wenn ein Klick auf einen unmapped UKey landet und der Nutzer
+„Mapping erstellen" wählt:
+
+1. `pendingReplacement` speichert `{ oldUkey, index, vorlage }`
+2. QuickMapModal öffnet sich
+3. Nach Mapping-Save: `handleUkeyReplace()` ersetzt den UKey im Template
+
+---
+
+## Bekannte Einschränkungen
+
+- **Nicht-Slot-Templates**: Seiten ohne Slot-Konfiguration liefern kein `data-illusion-vorlage` → Edit-Save zeigt Fehler-Toast
+- **Relative Pfade im Template**: CSS/JS-Links im Iframe können broken sein wenn kein absoluter Pfad verwendet wird
+
+---
+
+## Erweiterungsideen
+
+- **Hover-Tooltip** zeigt UKey-Name vor dem Klick
+- **Mehrfach-Klick-Modus**: Alle Felder gleichzeitig mit Badges anzeigen
+- **A/B-Testing**: Zwei Template-Varianten im Split-View vergleichen
+
 
 Ziel: Im Template-Editor kann der Nutzer in der Preview auf einen gerenderten Wert klicken
 (z.B. "220V") und den zugrunde liegenden UKey ändern — ohne den HTML-Code zu sehen.

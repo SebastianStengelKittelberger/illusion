@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>illusion – Interner Pitch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f13;
+      color: #f0f0f0;
+    }
+
+    /* Navigation */
+    #nav {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1rem;
+      z-index: 100;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    #nav button {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      transition: all 0.2s;
+    }
+    #nav button:hover { color: #fff; background: rgba(255,255,255,0.1); }
+    #slide-counter { color: #666; font-size: 0.85rem; line-height: 2; padding: 0 0.5rem; }
+
+    /* Slides */
+    .slide {
+      display: none;
+      min-height: 100vh;
+      padding: 4rem 6rem;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide.active { display: flex; }
+
+    /* Slide themes */
+    .slide-cover   { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .slide-problem { background: linear-gradient(135deg, #1a0a0a 0%, #2d1515 100%); }
+    .slide-insight { background: linear-gradient(135deg, #0a0a1a 0%, #151530 100%); }
+    .slide-solution{ background: linear-gradient(135deg, #0a1a0a 0%, #0f2d15 100%); }
+    .slide-feature { background: linear-gradient(135deg, #0d0d20 0%, #1a1a35 100%); }
+    .slide-proof   { background: linear-gradient(135deg, #1a1200 0%, #2d2000 100%); }
+    .slide-roadmap { background: linear-gradient(135deg, #0d1a1a 0%, #0f2d2d 100%); }
+    .slide-cta     { background: linear-gradient(135deg, #1a0a1a 0%, #2d0f2d 100%); }
+
+    /* Typography */
+    .eyebrow {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #6366f1;
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+    p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: #c0c0d0;
+      max-width: 60ch;
+    }
+    .lead {
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      line-height: 1.6;
+      color: #d0d0e0;
+      max-width: 55ch;
+    }
+    .muted { color: #666; font-size: 0.9rem; }
+
+    /* Highlight */
+    .accent { color: #6366f1; }
+    .accent-green { color: #22c55e; }
+    .accent-red { color: #ef4444; }
+    .accent-amber { color: #f59e0b; }
+    strong { color: #fff; font-weight: 600; }
+
+    /* Quote */
+    blockquote {
+      border-left: 3px solid #6366f1;
+      padding: 1.2rem 1.8rem;
+      margin: 2rem 0;
+      background: rgba(99,102,241,0.08);
+      border-radius: 0 12px 12px 0;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      color: #e0e0f0;
+      font-style: italic;
+      max-width: 55ch;
+    }
+
+    /* Cards grid */
+    .grid {
+      display: grid;
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .card .card-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+    .card h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    .card p { font-size: 0.9rem; color: #999; line-height: 1.5; }
+
+    /* Big number */
+    .big-number {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    /* Comparison table */
+    .compare {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      font-size: 0.95rem;
+    }
+    .compare th {
+      text-align: left;
+      padding: 0.8rem 1rem;
+      color: #999;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .compare td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: #c0c0d0;
+    }
+    .compare tr:last-child td { border-bottom: none; }
+    .compare .col-bad  { color: #ef4444; }
+    .compare .col-good { color: #22c55e; }
+    .compare .col-name { color: #fff; font-weight: 500; }
+
+    /* Flow diagram */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .flow-box {
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 12px;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      white-space: nowrap;
+    }
+    .flow-arrow { color: #4a4a6a; font-size: 1.2rem; }
+    .flow-box.highlight {
+      background: rgba(99,102,241,0.3);
+      border-color: #6366f1;
+      color: #fff;
+    }
+
+    /* Pill badges */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .badge-red   { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-blue  { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+
+    /* Two column layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    /* List */
+    .check-list {
+      list-style: none;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: #c0c0d0;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .check-list li::before {
+      content: '✓';
+      color: #22c55e;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .check-list.cross li::before { content: '✗'; color: #ef4444; }
+
+    /* Decorative background elements */
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    /* Timeline */
+    .timeline { margin-top: 2rem; display: flex; flex-direction: column; gap: 1.2rem; }
+    .timeline-item { display: flex; gap: 1.5rem; align-items: flex-start; }
+    .timeline-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #6366f1;
+      margin-top: 0.3rem;
+      flex-shrink: 0;
+    }
+    .timeline-dot.done { background: #22c55e; }
+    .timeline-dot.next { background: #f59e0b; }
+    .timeline-content h4 { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 0.2rem; }
+    .timeline-content p { font-size: 0.9rem; color: #888; }
+
+    /* Keyboard hint */
+    .key-hint {
+      position: fixed;
+      top: 1.5rem;
+      right: 2rem;
+      font-size: 0.75rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+<div class="key-hint">← → oder Klick zum Navigieren</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 1: COVER -->
+<div class="slide slide-cover active">
+  <div class="bg-circle" style="width:600px;height:600px;background:#6366f1;top:-200px;right:-200px;"></div>
+  <div class="bg-circle" style="width:400px;height:400px;background:#3b82f6;bottom:-150px;left:-100px;"></div>
+
+  <div class="eyebrow">Internes Projekt · Webagentur · 2026</div>
+  <h1>illusion</h1>
+  <p class="lead" style="font-size:1.6rem; color:#e0e0f0; margin-bottom:2rem;">
+    Produktkataloge.<br>Einmal richtig gebaut.<br><span class="accent">Für jeden Kunden.</span>
+  </p>
+  <p class="muted">Vom Projekt-Modell zum Plattform-Modell</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 2: DER SCHMERZ -->
+<div class="slide slide-problem">
+  <div class="bg-circle" style="width:500px;height:500px;background:#ef4444;top:-150px;right:-100px;"></div>
+
+  <div class="eyebrow">Das Problem</div>
+  <h2>Wir bauen denselben Produktkatalog<br>immer wieder neu.</h2>
+
+  <div class="grid grid-3" style="margin-top:2.5rem;">
+    <div class="card">
+      <div class="card-icon">🔁</div>
+      <h3>Kunde A, B, C, D …</h3>
+      <p>Jedes Mal: Anforderungen aufnehmen, Datenstruktur analysieren, von Null entwickeln.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🐌</div>
+      <h3>Änderungen dauern Wochen</h3>
+      <p>„Können wir ein neues Feld auf der Produktseite anzeigen?" — Ticket, Sprint, Deployment.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">💸</div>
+      <h3>Wachstum durch Köpfe</h3>
+      <p>Mehr Kunden = mehr Entwickler. Keine Plattform bedeutet kein Skalierungseffekt.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 3: WAS KUNDEN WIRKLICH WOLLEN -->
+<div class="slide slide-insight">
+  <div class="eyebrow">Was Kunden wirklich wollen</div>
+  <h2>Kein CMS. Keine Datenbank.<br>Sie wollen <span class="accent">Kontrolle</span>.</h2>
+
+  <div class="two-col" style="margin-top:2.5rem;">
+    <div>
+      <p style="margin-bottom:1rem; color:#888;">Was Kunden sagen:</p>
+      <blockquote style="margin:0 0 1rem 0;">"Warum steht auf unserer Website immer noch die alte Spannung? Wir haben euch das doch gemeldet."</blockquote>
+      <blockquote style="margin:0 0 1rem 0;">"Können wir das Bild selbst tauschen ohne euch anzurufen?"</blockquote>
+      <blockquote style="margin:0;">"Wir wissen nicht, woher die Werte auf der Seite eigentlich kommen."</blockquote>
+    </div>
+    <div>
+      <p style="margin-bottom:1rem; color:#888;">Was Kunden brauchen:</p>
+      <ul class="check-list">
+        <li>Sehen, welcher Wert auf der Seite woher kommt</li>
+        <li>Selbst Felder anpassen — ohne Entwickler</li>
+        <li>Neue Produkte erscheinen automatisch</li>
+        <li>Qualitätsprobleme erkennen bevor Kunden sie melden</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 4: DIE IDEE -->
+<div class="slide slide-solution">
+  <div class="bg-circle" style="width:500px;height:500px;background:#22c55e;bottom:-200px;right:-150px;"></div>
+
+  <div class="eyebrow">Die Idee</div>
+  <h2>Eine Plattform.<br>Konfigurierbar für jeden Kunden.</h2>
+
+  <p class="lead" style="margin-top:1.5rem; margin-bottom:2.5rem;">
+    <strong>illusion</strong> verbindet beliebige Produktdaten mit Web-Templates —
+    konfigurierbar, ohne Code. Was früher 6 Monate Entwicklung war,
+    wird in Tagen eingerichtet.
+  </p>
+
+  <div class="flow">
+    <div class="flow-box">Produktdatenbank</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box highlight">illusion<br><span style="font-size:0.75rem; opacity:0.7;">Mapping</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Web-Templates</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Produktseite</div>
+  </div>
+
+  <p style="margin-top:2rem; font-size:0.9rem; color:#666;">
+    Das Mapping — welches Datenbankfeld auf welches Website-Feld geht — ist konfigurierbar.<br>
+    Kein Code. Keine Deployments. Kein Entwickler-Ticket für jede Änderung.
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 5: WAS ES KANN -->
+<div class="slide slide-feature">
+  <div class="eyebrow">Was illusion kann</div>
+  <h2>Mehr als ein Template-Builder.</h2>
+
+  <div class="grid grid-3" style="margin-top:2rem;">
+    <div class="card">
+      <div class="card-icon">🗺️</div>
+      <h3>Mapping konfigurieren</h3>
+      <p>Welches Datenbankfeld erscheint wo auf der Seite — visuell einstellbar, jederzeit änderbar.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">✏️</div>
+      <h3>Klick-zum-Ändern</h3>
+      <p>Redakteur klickt direkt auf einen Wert in der Vorschau und ändert das dahinterliegende Mapping — ohne HTML.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <h3>Datenqualität auf einen Blick</h3>
+      <p>Welche Produkte haben kein Bild? Wo fehlt die Beschreibung? Dashboard zeigt es sofort.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌍</div>
+      <h3>Multi-Markt & Sprachen</h3>
+      <p>DE/AT/CH, EN/FR/ES — jedes Land bekommt eigene Templates und Übersetzungen.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🗺</div>
+      <h3>URL-Verwaltung</h3>
+      <p>Welche URL zeigt welche Seite — pflegbar ohne Code. Auch für CMS-Seiten ohne Produktdaten.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🕐</div>
+      <h3>Versionshistorie</h3>
+      <p>Jede Template-Änderung ist gespeichert. Ein Klick zurück zur letzten Version.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 6: VISUAL EDITOR HIGHLIGHT -->
+<div class="slide slide-feature">
+  <div class="eyebrow">Das Highlight</div>
+  <h2>Der Visual Editor —<br>kein anderes System kann das.</h2>
+
+  <div class="two-col" style="margin-top:2rem; gap:3rem;">
+    <div>
+      <p class="lead" style="margin-bottom:1.5rem;">
+        Der Redakteur sieht die fertige Produktseite.<br>
+        Er klickt auf einen Wert — z.B. „220V".<br>
+        Ein Menü öffnet sich: <strong>Welches Datenbankfeld soll hier erscheinen?</strong><br>
+        Er wählt. Die Seite aktualisiert sich sofort.
+      </p>
+      <p style="color:#666; font-size:0.9rem;">
+        Kein HTML. Kein Deployment. Kein Entwickler-Ticket.<br>
+        Mapping-Änderung dauert 30 Sekunden.
+      </p>
+    </div>
+    <div>
+      <div class="card" style="border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.08);">
+        <div style="font-size:0.85rem; color:#888; margin-bottom:1rem;">Vorher / Nachher</div>
+        <div style="margin-bottom:1.2rem;">
+          <span class="badge badge-red">Vorher</span>
+          <p style="margin-top:0.5rem; font-size:0.9rem;">"Können wir die Spannung durch die Nennspannung ersetzen?" — 3 Tage Entwicklung</p>
+        </div>
+        <div>
+          <span class="badge badge-green">Nachher</span>
+          <p style="margin-top:0.5rem; font-size:0.9rem;">Redakteur klickt auf "220V" → wählt "Nennspannung" → fertig. 30 Sekunden.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 7: VERGLEICH -->
+<div class="slide slide-insight">
+  <div class="eyebrow">Vergleich</div>
+  <h2>illusion vs. Alternativen</h2>
+
+  <table class="compare" style="margin-top:2rem;">
+    <thead>
+      <tr>
+        <th>Fähigkeit</th>
+        <th>Maßgeschneidert</th>
+        <th>Pimcore / Akeneo</th>
+        <th>illusion</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="col-name">Redakteur ändert Mapping selbst</td>
+        <td class="col-bad">✗ immer Entwickler nötig</td>
+        <td class="col-bad">✗ kein Konzept dafür</td>
+        <td class="col-good">✓ Visual Editor</td>
+      </tr>
+      <tr>
+        <td class="col-name">Mehrere Datenquellen kombinieren</td>
+        <td class="col-good">✓ aufwändig</td>
+        <td class="col-bad">✗ eine Quelle</td>
+        <td class="col-good">✓ nativ</td>
+      </tr>
+      <tr>
+        <td class="col-name">Woher kommt dieser Wert?</td>
+        <td class="col-bad">✗ Blackbox</td>
+        <td class="col-bad">✗ nicht sichtbar</td>
+        <td class="col-good">✓ immer transparent</td>
+      </tr>
+      <tr>
+        <td class="col-name">Neuer Kunde: Einrichtungszeit</td>
+        <td class="col-bad">Monate</td>
+        <td class="col-bad">Wochen–Monate</td>
+        <td class="col-good">Tage (Roadmap: Stunden)</td>
+      </tr>
+      <tr>
+        <td class="col-name">Enterprise Java-Stack</td>
+        <td class="col-good">✓</td>
+        <td class="col-bad">✗ PHP</td>
+        <td class="col-good">✓ Spring Boot</td>
+      </tr>
+      <tr>
+        <td class="col-name">Lizenzkosten</td>
+        <td>—</td>
+        <td class="col-bad">€25.000+/Jahr</td>
+        <td class="col-good">Günstig</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 8: STAND HEUTE -->
+<div class="slide slide-proof">
+  <div class="bg-circle" style="width:400px;height:400px;background:#f59e0b;top:-100px;right:-100px;"></div>
+
+  <div class="eyebrow">Stand heute</div>
+  <h2>Was bereits funktioniert.</h2>
+
+  <div class="two-col" style="margin-top:2rem;">
+    <div>
+      <ul class="check-list">
+        <li>Mapping-Engine vollständig implementiert</li>
+        <li>Visual Editor mit Klick-zum-Ändern</li>
+        <li>Datenqualitäts-Dashboard</li>
+        <li>Multi-Sprache / Multi-Land</li>
+        <li>Template-System mit Versionshistorie</li>
+        <li>URL-Routing pflegbar ohne Code</li>
+        <li>CMS-Seiten (ohne Produktdaten)</li>
+        <li>Getestet mit realem Bosch-Katalog</li>
+      </ul>
+    </div>
+    <div>
+      <p style="color:#888; margin-bottom:1rem;">Noch offen:</p>
+      <ul class="check-list cross">
+        <li>Login / Zugriffsschutz</li>
+        <li>Freigabe-Workflow (Entwurf → Live)</li>
+        <li>Self-Service-Onboarding für neue Kunden</li>
+        <li>Produktiv-Deployment</li>
+      </ul>
+      <p style="margin-top:1.5rem; font-size:0.85rem; color:#666;">
+        Das System ist ein funktionsfähiger POC.<br>
+        Kein Spielzeug — eine lauffähige Plattform.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 9: DER NÄCHSTE SCHRITT -->
+<div class="slide slide-roadmap">
+  <div class="eyebrow">Der entscheidende nächste Schritt</div>
+  <h2>Generic Adapter Wizard —<br>powered by KI.</h2>
+
+  <p class="lead" style="margin-top:1.5rem; margin-bottom:2.5rem;">
+    Heute braucht jeder neue Kunde einen manuell entwickelten Adapter.
+    Der Generic Adapter Wizard macht das überflüssig:
+    <strong>Neue Kunden binden sich selbst an — in Stunden, ohne Entwickler.</strong>
+  </p>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-icon">📤</div>
+      <h3>Schritt 1: Daten hochladen</h3>
+      <p>REST-API-URL, CSV oder XML — Kunde gibt seine Datenquelle an.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🤖</div>
+      <h3>Schritt 2: KI analysiert</h3>
+      <p>KI erkennt automatisch: "product_voltage" → Spannung. "image_main" → Produktbild.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">✅</div>
+      <h3>Schritt 3: Bestätigen & live</h3>
+      <p>Redakteur prüft Vorschläge, korrigiert bei Bedarf — fertig. Produktkatalog ist indexiert.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 10: GESCHÄFTSMODELL -->
+<div class="slide slide-insight">
+  <div class="eyebrow">Was das für uns bedeutet</div>
+  <h2>Vom Stunden-Modell<br>zum Plattform-Modell.</h2>
+
+  <div class="two-col" style="margin-top:2.5rem; gap:4rem;">
+    <div>
+      <p style="color:#888; margin-bottom:1rem;">Heute:</p>
+      <div class="card" style="border-color:rgba(239,68,68,0.3);">
+        <p style="color:#c0c0d0; line-height:1.8;">
+          Kunde A → 6 Monate Projekt<br>
+          Kunde B → 6 Monate Projekt<br>
+          Kunde C → 6 Monate Projekt<br><br>
+          <span style="color:#666;">Änderung → Ticket → Sprint → Deploy</span><br>
+          <span style="color:#666;">Wachstum = mehr Entwickler einstellen</span>
+        </p>
+      </div>
+    </div>
+    <div>
+      <p style="color:#888; margin-bottom:1rem;">Mit illusion:</p>
+      <div class="card" style="border-color:rgba(34,197,94,0.3);">
+        <p style="color:#c0c0d0; line-height:1.8;">
+          Kunde A → 2 Wochen Setup → läuft<br>
+          Kunde B → 2 Tage (Generic Adapter) → läuft<br>
+          Kunde C → 2 Tage → läuft<br><br>
+          <span style="color:#22c55e;">Änderung → Redakteur macht es selbst</span><br>
+          <span style="color:#22c55e;">Wachstum ohne proportional mehr Aufwand</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 11: ROADMAP -->
+<div class="slide slide-roadmap">
+  <div class="eyebrow">Roadmap</div>
+  <h2>Was als nächstes kommt.</h2>
+
+  <div class="timeline" style="margin-top:2rem; max-width:600px;">
+    <div class="timeline-item">
+      <div class="timeline-dot done"></div>
+      <div class="timeline-content">
+        <h4>✅ Heute — Funktionsfähiger POC</h4>
+        <p>Mapping, Visual Editor, Templates, Datenqualität, URL-Routing — alles läuft.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot next"></div>
+      <div class="timeline-content">
+        <h4>⏳ Nächste Priorität — Sicherheit & Freigabe-Workflow</h4>
+        <p>Login, Rollenverwaltung, Entwurf-zu-Live-Pipeline. Notwendig für Produktivbetrieb.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <h4>📋 Generic Adapter Wizard mit KI</h4>
+        <p>Self-Service-Onboarding. Neuer Kunde bringt seine Daten — ist in Stunden live.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <h4>📋 Multi-Channel Publishing</h4>
+        <p>Dieselben Daten → Webseite + Google Shopping + Amazon + PDF-Katalog gleichzeitig.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <h4>💡 Erster externer Kunde außerhalb Bosch</h4>
+        <p>Proof: Das System funktioniert für verschiedene Datenstrukturen und Branchen.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SLIDE 12: CALL TO ACTION -->
+<div class="slide slide-cta">
+  <div class="bg-circle" style="width:600px;height:600px;background:#6366f1;bottom:-300px;right:-200px;"></div>
+  <div class="bg-circle" style="width:400px;height:400px;background:#a855f7;top:-200px;left:-100px;"></div>
+
+  <div class="eyebrow">Was wir heute entscheiden</div>
+  <h2>Drei Fragen.</h2>
+
+  <div class="grid grid-3" style="margin-top:2.5rem;">
+    <div class="card" style="border-color:rgba(99,102,241,0.4); background:rgba(99,102,241,0.1);">
+      <div style="font-size:1.5rem; font-weight:800; color:#a5b4fc; margin-bottom:0.8rem;">01</div>
+      <h3>Weiterentwickeln?</h3>
+      <p>Geben wir illusion dedizierte Entwicklungszeit — statt nur nebenbei?</p>
+    </div>
+    <div class="card" style="border-color:rgba(99,102,241,0.4); background:rgba(99,102,241,0.1);">
+      <div style="font-size:1.5rem; font-weight:800; color:#a5b4fc; margin-bottom:0.8rem;">02</div>
+      <h3>Welcher Kunde als nächstes?</h3>
+      <p>Welches laufende oder geplante Projekt eignet sich als zweiter Referenzkunde?</p>
+    </div>
+    <div class="card" style="border-color:rgba(99,102,241,0.4); background:rgba(99,102,241,0.1);">
+      <div style="font-size:1.5rem; font-weight:800; color:#a5b4fc; margin-bottom:0.8rem;">03</div>
+      <h3>Wie positionieren wir es?</h3>
+      <p>Als internes Effizienz-Tool? Als eigenständiges Produkt? Als Teil unseres Angebots?</p>
+    </div>
+  </div>
+
+  <p style="margin-top:3rem; font-size:0.9rem; color:#555;">
+    illusion · Internes POC · Stand März 2026
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ NAVIGATION -->
+<div id="nav">
+  <button onclick="prev()">←</button>
+  <span id="slide-counter">1 / 12</span>
+  <button onclick="next()">→</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function show(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp') prev();
+  });
+
+  // Click right/left half to navigate
+  document.addEventListener('click', e => {
+    if (e.target.closest('#nav')) return;
+    if (e.clientX > window.innerWidth / 2) next(); else prev();
+  });
+</script>
+</body>
+</html>

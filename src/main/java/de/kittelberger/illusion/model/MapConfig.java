@@ -15,4 +15,7 @@ public class MapConfig {
   private String javaCode;
   private Boolean isFallback;
   private TargetType target;
+
+  /** Optional filter configuration. Null means this ukey is not used as a filter. */
+  private FilterConfig filterConfig;
 }

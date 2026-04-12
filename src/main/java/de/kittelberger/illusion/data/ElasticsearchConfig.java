@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 
 @Configuration
 @ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true")
@@ -33,5 +34,12 @@ public class ElasticsearchConfig {
   @Bean
   public ElasticsearchClient elasticsearchClient(Rest5ClientTransport elasticsearchTransport) {
     return new ElasticsearchClient(elasticsearchTransport);
+  }
+
+  @Bean
+  public RestClient elasticsearchRestClient() {
+    return RestClient.builder()
+      .baseUrl("http://" + host + ":" + port)
+      .build();
   }
 }

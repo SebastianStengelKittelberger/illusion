@@ -1,7 +1,7 @@
 # Illusion – Implementierungsstand
 
 > Übersicht über alle Ideen aus den Konzept-Dokumenten und ihren aktuellen Umsetzungsstand.
-> Stand: 28. März 2026 (aktualisiert)
+> Stand: 29. März 2026 (aktualisiert)
 
 ---
 
@@ -39,6 +39,186 @@
 | Template-Engine / Webseiten-Generierung | ✅ | **Moonlight** – Thymeleaf-basiert, Seiten/Vorlagen-System, Port 8078 |
 
 ---
+
+## Elasticsearch
+
+| Idee | Status | Anmerkung |
+|------|--------|-----------|
+| illusion schreibt gemappte Daten in ES | ✅ | `ElasticsearchIndexService`, Bulk-API mit Rollback |
+| bosch.adapter schreibt Rohdaten in ES | ✅ | 4 Index-Services |
+| illusion liest ausschließlich aus ES | ✅ | Alle Load-Services |
+| search_after Pagination (kein OOM) | ✅ | `_doc`-Sort, PAGE_SIZE konfigurierbar |
+| Index mit `dynamic: false` | ✅ | Verhindert Überschreitung des 1000-Felder-Limits |
+| Facetten-Suche | 💡 | |
+| Filter (AttrClass, Kategorie, ProductType) | 📋 | |
+| Volltextsuche / Autocomplete | 💡 | |
+
+---
+
+## Daten-Intelligenz
+
+| Idee | Status | Anmerkung |
+|------|--------|-----------|
+| Datenqualitäts-Dashboard | ✅ | Frontend + Backend; Fortschrittsbalken, Drilldown, UKEY-Suche |
+| DQ Drilldown: Fehlende SKUs | ✅ | Tab „❌ Fehlend" – alle SKUs ohne den UKEY |
+| DQ Drilldown: Vorhandene Werte | ✅ | Tab „✅ Vorhanden" – SKU + gemappter Wert, filterbar |
+| Vollständigkeits-Score pro Produkt | ✅ | `DataQuality` Model mit Score |
+| Automatische Feldvorschläge | 💡 | |
+| Datenvererbung (Varianten erben) | 💡 | |
+| Automatische Übersetzung (DeepL) | 💡 | |
+| KI-gestützte Änderungsvorschläge | 💡 | |
+
+---
+
+## Technische Infrastruktur
+
+| Idee | Status | Anmerkung |
+|------|--------|-----------|
+| MappingConfig in ES | ✅ | Index `illusion-mapping-config`, versioniert per Timestamp |
+| MappingConfig REST API | ✅ | GET/PUT `/{country}/{language}/mapping-config` |
+| CORS für UI | ✅ | `WebConfig.java` |
+| Ukeys in mapped/unmapped aufteilen | ✅ | `InformationService` |
+| Ergebnis cachen (Illusion) | ✅ | `@Cacheable("information")` In-Memory |
+| Caching Moonlight (Caffeine) | ✅ | 30s TTL für pages, vorlagen, labels, mapping-config, product-data |
+| Health Endpoints (Actuator) | 📋 | Spring Boot gibt das fast geschenkt |
+| Distributed Caching (Redis) | 📋 | Aktuell In-Memory / Caffeine |
+| Authentifizierung / Zugriffsschutz | 📋 | Kein Login, offen für jeden im Netzwerk |
+| Distributed Tracing | 💡 | |
+| Docker Compose | 💡 | |
+
+---
+
+## Generic Adapter Konzept
+
+| Feature | Status | Anmerkung |
+|---------|--------|-----------|
+| REST API als Datenquelle | ✅ | bosch.adapter als kundenspezifische Implementierung |
+| Normalisierung in illusion-internes Format | ✅ | `MapProductDTOService` |
+| Wizard-Flow (UI) | 💡 | |
+| JDBC / Datenbank direkt | 💡 | |
+| CSV / Excel Upload | 💡 | |
+| Generic Adapter (kein Custom-Code) | 💡 | Aktuell: kundenspezifischer bosch.adapter |
+
+---
+
+## Summerlight – Pflege-UI
+
+> Pfad: `/Users/sebastianstengel/work/summerlight` | Port: 5173 (Vite Dev)
+> Start: `cd /Users/sebastianstengel/work/summerlight && npm run dev`
+> GitHub: https://github.com/SebastianStengelKittelberger/summerlight
+
+### Screens
+
+| Screen | Route | Status | Beschreibung |
+|--------|-------|--------|--------------|
+| Ukey-Explorer | `/ukeys` | ✅ | Zwei-Spalten-Grid: Gemappt / Nicht gemappt, SKU + PRODUCT |
+| Mapping Config Liste | `/configs` | ✅ | CRUD-Tabelle, Import/Export JSON, „Alle anwenden" |
+| Mapping Config Editor | `/editor` | ✅ | Formular mit bedingten Feldern, Monaco für JAVA_CODE, URL-Param `?ukey=X` |
+| Template Editor | `/templates` | ✅ | File-Explorer-Layout, Split-Preview, Versionierung, Undo/Redo, Visual Edit Mode |
+| Datenqualitäts-Dashboard | `/quality` | ✅ | Fortschrittsbalken, UKEY-Suche, Drilldown-Tabs, DQ→Mapping-Navigation |
+| URL-Routing Editor | `/routing` | ✅ | Routing-Tabelle pflegen: URL → Seite (CMS oder Produkt) |
+
+### Template Editor – Features
+
+| Feature | Status | Anmerkung |
+|---------|--------|-----------|
+| File-Explorer (Seiten + Vorlagen) | ✅ | Linke Sidebar, klappbar, Seiten zeigen Verwendungen |
+| Verwendungen ausklappen | ✅ | Klick auf Seite zeigt zugewiesene Slots darunter |
+| Drag & Drop Vorlage → Seite | ✅ | Kopiert Vorlage, weist sie der Zielseite zu, speichert in ES |
+| Vorlage umbenennen | ✅ | ✏ Hover-Button, Inline-Rename, updated alle Seiten-Refs |
+| Vorlage löschen | ✅ | 🗑 Hover-Button, Bestätigung, DELETE-Endpoint in Moonlight |
+| Verwendung entfernen | ✅ | ✕ im aufgeklappten Slot, aktualisiert Seiten-Config |
+| UKey-Modals (Gemappt / Nicht gemappt) | ✅ | Chip-Grid mit Suche, Klick fügt an Cursorposition ein |
+| Rechtsklick → „UKey mappen…" | ✅ | Monaco-Kontextmenü erkennt `$skuAttr(UKEY)$` unter Cursor |
+| Undo/Redo (Seiten-Config) | ✅ | ↩/↪ Buttons, History-Stack, reset beim Seitenwechsel |
+| Split-View Preview | ✅ | ⊞ Toggle, iframe auf Moonlight, Auto-Refresh beim Speichern |
+| Versionierung | ✅ | 🕐 Verlauf-Button, History-Modal, ↩ Wiederherstellen |
+| **Visual Edit Mode** | ✅ | Fullscreen-Preview, Klick auf Element öffnet UKey-Picker, direkt im Template speichern |
+| Visual Edit: Bild-Elemente | ✅ | IMG-Tags werden erkannt, Thumbnail in Modal angezeigt |
+| Visual Edit: Leere Felder klickbar | ✅ | `:empty` CSS sichert Mindestgröße für nicht befüllte Felder |
+| Quick-Mapping aus Edit Mode | ✅ | Unmapped UKey → Mapping direkt erstellen → Template wird aktualisiert |
+
+### Allgemeine Features
+
+| Feature | Status | Anmerkung |
+|---------|--------|-----------|
+| Country/Language Selector | ✅ | Global im Header |
+| Horizontale Top-Navigation | ✅ | Top-Bar mit 6 Bereichen |
+| Zustand-Store (Zustand) | ✅ | Country, Language, Configs, Toast |
+| Toast-Benachrichtigungen | ✅ | Grün/Rot, auto-dismiss |
+| Re-Indexieren | ✅ | Button in Top-Nav, Länder/Sprach-Auswahl |
+| TargetFieldType LIST | ✅ | Neben STRING und IMAGE als Mapping-Zieltyp wählbar |
+| Authentifizierung | 📋 | Kein Login, offen für jeden im Netzwerk |
+
+---
+
+## Moonlight – Template Engine
+
+> Pfad: `/Users/sebastianstengel/work/moonlight` | Port: 8078
+> Start: IntelliJ oder `./mvnw spring-boot:run`
+
+```
+bosch.adapter → [ES illusion-{land}-{sprache}] → moonlight (Rendering) → HTML
+```
+
+### ES-Indizes
+
+| Index | Beschreibung |
+|-------|--------------|
+| `moonlight-vorlagen` | Globale HTML-Slot-Templates |
+| `moonlight-vorlagen-history` | Versionshistorie pro Vorlage (bis 20 Einträge) |
+| `moonlight-pages` | Seitenkonfigurationen pro Country/Language |
+| `moonlight-labels` | Globale Labels pro Country/Language |
+| `moonlight-routes` | URL-Routing-Tabellen pro Country/Language |
+| `illusion-mapping-config` | MapConfig – Single Source of Truth (gelesen von Moonlight) |
+
+### Implementiert
+
+| Feature | Status | Anmerkung |
+|---------|--------|-----------|
+| Produktseiten-Endpoint | ✅ | `GET /{country}/{language}/product-{sku}?page=&editMode=` |
+| Thymeleaf-Integration | ✅ | String-Templates dynamisch aus ES geladen |
+| Slot-basiertes Rendering | ✅ | Seite aus Vorlagen (stage, description, benefits, …) |
+| Seiten/Vorlagen/Labels-System | ✅ | Vollständig ES-basiert |
+| Liest direkt aus ES | ✅ | `DataService` liest aus `illusion-{country}-{language}` |
+| Eine MappingConfig pro Land | ✅ | Moonlight liest immer Illusion's MappingConfig |
+| Custom Template-Syntax | ✅ | `$skuAttr(UKEY)$.method()` → Thymeleaf-Expressions |
+| Null-safe Feldauflösung | ✅ | Fehlende Felder rendern leer, kein Crash |
+| Label-System | ✅ | `§label.key§` → OGNL-kompatible Ausdrücke |
+| Graceful Degradation | ✅ | Nicht gemappte Ukeys → `th:text="''"` |
+| Caffeine Cache (30s TTL) | ✅ | pages, vorlagen, labels, mapping-config, product-data |
+| Versionierung Vorlagen | ✅ | History-Index, GET /history, Restore via Frontend |
+| CRUD Vorlagen | ✅ | GET / PUT / DELETE `/vorlage/{name}` |
+| CRUD Seiten | ✅ | GET / PUT `/{country}/{language}/page/{name}` |
+| **Visual Edit Mode** | ✅ | `?editMode=true` annotiert alle `$skuAttr()`-Tokens mit `data-illusion-*` Attributen + Highlight-CSS |
+| Edit Mode: Standalone-Tokens | ✅ | Erzeugt `<span data-illusion-ukey="..." class="illusion-editable">` |
+| Edit Mode: Attribut-Tokens (th:text, th:src) | ✅ | Injiziert `data-illusion-*` in das öffnende HTML-Tag |
+| Edit Mode: Leere Felder klickbar | ✅ | `:empty` CSS mit `min-width/min-height` + UKey-Label als Pseudo-Content |
+| **URL-Routing-System** | ✅ | `RoutingController`, `RoutingStorageService`, `RouteConfig` |
+| Routing: Catch-All-Controller | ✅ | `GET /{country}/{language}/**` – nachschlagen in Routing-Tabelle |
+| Routing: CMS-Seiten | ✅ | `renderCmsPage()` – Rendering ohne SKU, nur Labels + Slots |
+| Routing: Produktseiten via Route | ✅ | `{sku}`-Platzhalter im URL-Pattern → SKU wird extrahiert |
+| Routing: CRUD | ✅ | GET/PUT `/{country}/{language}/routes` |
+
+### Offen
+
+| Feature | Status | Anmerkung |
+|---------|--------|-----------|
+| Dynamische Seiten-Auswahl nach Produkttyp | 📋 | Aktuell: Default `"produktseite"` |
+| Fehlerbehandlung im Controller | 📋 | Kein globales Exception Handling |
+| Publish/Draft-Status | 📋 | Alle Änderungen sofort live |
+| Authentifizierung | 📋 | Kein Token-Schutz auf Endpoints |
+
+---
+
+## Quick Wins (nächste sinnvolle Schritte)
+
+1. **Authentifizierung** – einfaches Login für Summerlight + API-Keys für Moonlight
+2. **Draft → Staging → Production Pipeline** – Änderungen nicht sofort live
+3. **Actuator Health Endpoint** – 1 Zeile in `application.yaml`
+4. **Dynamisches Produkttyp-Routing** – Moonlight wählt Seite nach Produkttyp
+5. **Redis Cache** – für horizontales Skalieren
+6. **Filter** – nach AttrClass, Kategorie, ProductType in Illusion
 
 ## Elasticsearch
 

@@ -29,7 +29,9 @@ class ComplexMappingHandlerTest {
   @Test
   void supports_returnsTrueWhenComplexMappingIsSet() {
     MapConfig config = new MapConfig();
-    config.setComplexMapping(new ComplexMapping());
+    ComplexMapping complexMapping = new ComplexMapping();
+    complexMapping.setReferencedAttrClasses(List.of("AttrClass1"));
+    config.setComplexMapping(complexMapping);
     assertThat(handler.supports(config)).isTrue();
   }
 

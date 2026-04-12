@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Service
 public class IndexingService {
@@ -23,6 +22,7 @@ public class IndexingService {
   private final LoadDataService loadDataService;
   private final List<MappingHandler> mappingHandlers;
   private final Optional<ElasticsearchIndexService> elasticsearchIndexService;
+  private final FilterIndexContributor filterIndexContributor;
 
   @Value("${xml.product-limit:-1}")
   private int productLimit;
@@ -36,11 +36,13 @@ public class IndexingService {
   public IndexingService(
     final LoadDataService loadDataService,
     final List<MappingHandler> mappingHandlers,
-    final Optional<ElasticsearchIndexService> elasticsearchIndexService
+    final Optional<ElasticsearchIndexService> elasticsearchIndexService,
+    final FilterIndexContributor filterIndexContributor
   ) {
     this.loadDataService = loadDataService;
     this.mappingHandlers = mappingHandlers;
     this.elasticsearchIndexService = elasticsearchIndexService;
+    this.filterIndexContributor = filterIndexContributor;
   }
 
   public Map<String, Map<String, Pair<String, Object>>> indexProduct(
@@ -125,10 +127,11 @@ public class IndexingService {
     String domain,
     Map<String, Map<String, Pair<String, Object>>> results
   ) {
+    Map<String, MappingContext> contexts = new ConcurrentHashMap<>();
     List<Future<Void>> futures = new ArrayList<>(products.size());
     for (Product product : List.copyOf(products)) {
       futures.add(executor.submit(() -> {
-        processProduct(product, skuMapConfigs, productDtoConfigs, country, language, mediaObjects, domain, results);
+        processProduct(product, skuMapConfigs, productDtoConfigs, country, language, mediaObjects, domain, results, contexts);
         return null;
       }));
     }
@@ -140,6 +143,11 @@ public class IndexingService {
         throw new RuntimeException("Fehler bei der Produkt-Verarbeitung", e);
       }
     });
+
+    // After all products in the batch are mapped, contribute filter data
+    List<MapConfig> allConfigs = new ArrayList<>(skuMapConfigs);
+    allConfigs.addAll(productDtoConfigs);
+    filterIndexContributor.contribute(allConfigs, contexts, results);
   }
 
   private void processProduct(
@@ -150,7 +158,8 @@ public class IndexingService {
     String language,
     Map<Long, Image> mediaObjects,
     String domain,
-    Map<String, Map<String, Pair<String, Object>>> results
+    Map<String, Map<String, Pair<String, Object>>> results,
+    Map<String, MappingContext> contexts
   ) {
     Map<String, Map<String, Pair<String, Object>>> productResult = new HashMap<>();
     MappingContext ctx = new MappingContext(
@@ -177,5 +186,7 @@ public class IndexingService {
     );
 
     results.putAll(productResult);
+    // Store context keyed by every SKU that was produced, for filter predicate evaluation
+    productResult.keySet().forEach(skuKey -> contexts.put(skuKey, ctx));
   }
 }
