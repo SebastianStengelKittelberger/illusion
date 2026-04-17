@@ -11,44 +11,41 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Writes indexed SKU documents to Elasticsearch.
- * Only active when {@code elasticsearch.enabled=true} and an {@link ElasticsearchClient} bean is present.
+ * Writes mapped category documents to a dedicated Elasticsearch index
+ * ({@code illusion-categories-{country}-{language}}).
  *
- * <p>All-or-nothing guarantee: if the Bulk API reports partial errors, all successfully written
- * documents from the same batch are deleted again so the index is never left in a partial state.
+ * <p>Kept separate from {@link ElasticsearchIndexService} so that product and category
+ * documents never share an index, and so the {@code ukey} identifier field (instead of
+ * {@code sku}) is stored correctly on category documents.
  */
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true")
-public class ElasticsearchIndexService {
+public class ElasticsearchCategoryResultIndexService {
 
   private final ElasticsearchClient esClient;
 
-  @Value("${elasticsearch.index-prefix:illusion}")
+  @Value("${elasticsearch.category-result-index-prefix:illusion-categories}")
   private String indexPrefix;
 
   @Value("${elasticsearch.max-fields:5000}")
   private String maxFields;
 
-  public ElasticsearchIndexService(ElasticsearchClient esClient) {
+  public ElasticsearchCategoryResultIndexService(ElasticsearchClient esClient) {
     this.esClient = esClient;
   }
 
   /**
-   * Indexes all SKU documents into Elasticsearch via the Bulk API.
+   * Bulk-indexes all mapped category documents.
    * The target index is {@code {prefix}-{country}-{language}} (all lowercase).
+   * Each document stores a {@code ukey} field (not {@code sku}) as the human-readable identifier.
    *
-   * <p>On partial failure the successfully written documents are rolled back so the index
-   * is never left in an inconsistent state. Errors are logged but never propagate —
-   * the calling service always returns its HTTP result.
-   *
-   * @param results  map of skuKey → (fieldName → (fieldType, value))
+   * @param results  map of categoryUkey → (fieldName → (fieldType, value))
    * @param country  two-letter country code (e.g. "DE")
    * @param language two-letter language code (e.g. "de")
    */
@@ -67,18 +64,16 @@ public class ElasticsearchIndexService {
     createIndex(indexName);
 
     BulkRequest.Builder bulk = new BulkRequest.Builder();
-    String indexedAt = Instant.now().toString();
 
-    results.forEach((skuKey, fields) -> {
+    results.forEach((categoryUkey, fields) -> {
       Map<String, Object> document = new HashMap<>();
       fields.forEach((field, pair) -> document.put(field, pair.getRight()));
-      document.put("sku", skuKey);
-      document.put("indexedAt", indexedAt);
+      document.put("ukey", categoryUkey);
 
       bulk.operations(op -> op
         .index(i -> i
           .index(indexName)
-          .id(skuKey)
+          .id(categoryUkey)
           .document(document)
         )
       );
@@ -98,10 +93,10 @@ public class ElasticsearchIndexService {
           .toList();
 
         log.warn(
-          "Elasticsearch bulk indexing had {} error(s) for index '{}' — rolling back {} successful document(s)",
+          "Bulk indexing had {} error(s) for category index '{}' — rolling back {} successful document(s)",
           failedIds.size(), indexName, succeededIds.size()
         );
-        failedIds.forEach(id -> log.warn("  Failed SKU '{}': {}",
+        failedIds.forEach(id -> log.warn("  Failed category '{}': {}",
           id,
           response.items().stream()
             .filter(i -> id.equals(i.id()) && i.error() != null)
@@ -111,10 +106,10 @@ public class ElasticsearchIndexService {
 
         rollback(indexName, succeededIds);
       } else {
-        log.info("Indexed {} documents into Elasticsearch index '{}'", results.size(), indexName);
+        log.info("Indexed {} category documents into Elasticsearch index '{}'", results.size(), indexName);
       }
     } catch (Exception e) {
-      log.error("Failed to write {} documents to Elasticsearch index '{}' — result is still returned",
+      log.error("Failed to write {} category documents to Elasticsearch index '{}'",
         results.size(), indexName, e);
     }
   }
@@ -124,7 +119,7 @@ public class ElasticsearchIndexService {
       esClient.indices().create(r -> r
         .index(indexName)
         .settings(s -> s
-          .mapping(m -> m.totalFields(tf -> tf.limit(String.valueOf(maxFields))))
+          .mapping(m -> m.totalFields(tf -> tf.limit(maxFields)))
         )
       );
       log.info("Created Elasticsearch index '{}' with total_fields.limit={}", indexName, maxFields);
@@ -161,14 +156,14 @@ public class ElasticsearchIndexService {
           .map(BulkResponseItem::id)
           .toList();
         log.error(
-          "Rollback incomplete — {} document(s) could not be deleted from index '{}': {}",
+          "Rollback incomplete — {} category document(s) could not be deleted from index '{}': {}",
           rollbackFailures.size(), indexName, rollbackFailures
         );
       } else {
-        log.info("Rollback successful — deleted {} document(s) from index '{}'", ids.size(), indexName);
+        log.info("Rollback successful — deleted {} category document(s) from index '{}'", ids.size(), indexName);
       }
     } catch (Exception e) {
-      log.error("Rollback failed for index '{}' — {} document(s) may remain: {}",
+      log.error("Rollback failed for category index '{}' — {} document(s) may remain: {}",
         indexName, ids.size(), ids, e);
     }
   }

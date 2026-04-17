@@ -1,10 +1,14 @@
 package de.kittelberger.illusion.service;
 
 import de.kittelberger.illusion.data.LoadDataService;
+import de.kittelberger.illusion.mapping.CategoryMappingContext;
+import de.kittelberger.illusion.mapping.CategoryMappingHandler;
+import de.kittelberger.illusion.mapping.CategoryTextMappingHandler;
 import de.kittelberger.illusion.mapping.JavaCodeMappingHandler;
 import de.kittelberger.illusion.mapping.MappingHandler;
 import de.kittelberger.illusion.mapping.TextMappingHandler;
 import de.kittelberger.illusion.model.Attribute;
+import de.kittelberger.illusion.model.Category;
 import de.kittelberger.illusion.model.DTOType;
 import de.kittelberger.illusion.model.MapConfig;
 import de.kittelberger.illusion.model.Product;
@@ -41,8 +45,9 @@ class IndexingServiceTest {
       new TextMappingHandler(),
       new JavaCodeMappingHandler(javaParserService)
     );
+    List<CategoryMappingHandler> categoryHandlers = List.of(new CategoryTextMappingHandler());
     FilterIndexContributor filterIndexContributor = new FilterIndexContributor(javaParserService);
-    indexingService = new IndexingService(loadDataService, handlers, java.util.Optional.empty(), filterIndexContributor);
+    indexingService = new IndexingService(loadDataService, handlers, categoryHandlers, java.util.Optional.empty(), java.util.Optional.empty(), filterIndexContributor);
   }
 
   // ---------------------------------------------------------------------------
@@ -150,6 +155,57 @@ class IndexingServiceTest {
   }
 
   // ---------------------------------------------------------------------------
+  // indexCategories
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void indexCategories_withNoCategories_returnsEmptyMap() {
+    when(loadDataService.getCategories("DE", "de")).thenReturn(List.of());
+
+    Map<String, Map<String, Pair<String, Object>>> result =
+      indexingService.indexCategories(List.of(categoryConfig("TITLE")), "DE", "de");
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void indexCategories_mapsTextAttributeForMatchingUkey() {
+    Category cat = category("CAT-001", "TITLE", "Elektrowerkzeuge");
+    when(loadDataService.getCategories("DE", "de")).thenReturn(List.of(cat));
+
+    Map<String, Map<String, Pair<String, Object>>> result =
+      indexingService.indexCategories(List.of(categoryConfig("TITLE")), "DE", "de");
+
+    assertThat(result).containsKey("CAT-001");
+    assertThat(result.get("CAT-001").get("name").getRight()).isEqualTo("Elektrowerkzeuge");
+  }
+
+  @Test
+  void indexCategories_keysResultByCategoryUkey() {
+    Category cat1 = category("CAT-001", "TITLE", "Elektrowerkzeuge");
+    Category cat2 = category("CAT-002", "TITLE", "Handwerkzeuge");
+    when(loadDataService.getCategories("DE", "de")).thenReturn(List.of(cat1, cat2));
+
+    Map<String, Map<String, Pair<String, Object>>> result =
+      indexingService.indexCategories(List.of(categoryConfig("TITLE")), "DE", "de");
+
+    assertThat(result).containsKeys("CAT-001", "CAT-002");
+  }
+
+  @Test
+  void indexCategories_filtersOutNonCategoryConfigs() {
+    Category cat = category("CAT-001", "TITLE", "Elektrowerkzeuge");
+    when(loadDataService.getCategories("DE", "de")).thenReturn(List.of(cat));
+
+    // Pass only PRODUCT-target config — no mapped fields, only skus/parentId are always added
+    Map<String, Map<String, Pair<String, Object>>> result =
+      indexingService.indexCategories(List.of(TITLE_SKU_CONFIG), "DE", "de");
+
+    assertThat(result).containsKey("CAT-001");
+    assertThat(result.get("CAT-001")).containsOnlyKeys("skus");
+  }
+
+  // ---------------------------------------------------------------------------
   // Test data builders
   // ---------------------------------------------------------------------------
 
@@ -207,5 +263,23 @@ class IndexingServiceTest {
 
     when(loadDataService.getMediaObjects("DE", "de")).thenReturn(Map.of());
     when(loadDataService.getDomain("DE", "de")).thenReturn("https://example.test");
+  }
+
+  private static MapConfig categoryConfig(String ukey) {
+    MapConfig c = new MapConfig();
+    c.setTarget(TargetType.CATEGORY);
+    c.setDtoType(DTOType.CATEGORY);
+    c.setMappingType("TEXT");
+    c.setTargetFieldType("STRING");
+    c.setUkey(ukey);
+    c.setTargetField("name");
+    return c;
+  }
+
+  private static Category category(String ukey, String attrUkey, String textValue) {
+    Attribute a = new Attribute();
+    a.setUkey(attrUkey);
+    a.setReferences(Map.of("TEXT", textValue, "BOOLEAN", false));
+    return new Category(1L, ukey, null, List.of(), Map.of(attrUkey, List.of(a)));
   }
 }

@@ -41,7 +41,8 @@ class LoadDataServiceTest {
       Optional.of(productLoadService),
       Optional.of(referenceLoadService),
       Optional.of(mediaObjectLoadService),
-      Optional.of(configLoadService)
+      Optional.of(configLoadService),
+      Optional.empty()
     );
   }
 
@@ -81,7 +82,7 @@ class LoadDataServiceTest {
   @Test
   void streamProducts_throwsWhenEsNotEnabled() {
     LoadDataService noEs = new LoadDataService(
-      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
     );
 
     assertThatThrownBy(() -> noEs.streamProducts("DE", "de", p -> true))
@@ -107,7 +108,7 @@ class LoadDataServiceTest {
   @Test
   void getReferences_throwsWhenEsNotEnabled() {
     LoadDataService noEs = new LoadDataService(
-      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
     );
 
     assertThatThrownBy(() -> noEs.getReferences("DE", "de"))
@@ -133,7 +134,7 @@ class LoadDataServiceTest {
   @Test
   void getMediaObjects_throwsWhenEsNotEnabled() {
     LoadDataService noEs = new LoadDataService(
-      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
     );
 
     assertThatThrownBy(() -> noEs.getMediaObjects("DE", "de"))
@@ -157,11 +158,43 @@ class LoadDataServiceTest {
   @Test
   void getDomain_throwsWhenEsNotEnabled() {
     LoadDataService noEs = new LoadDataService(
-      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
     );
 
     assertThatThrownBy(() -> noEs.getDomain("DE", "de"))
       .isInstanceOf(IllegalStateException.class);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Categories
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void getCategories_delegatesToEsService() {
+    ElasticsearchCategoryLoadService categoryLoadService = mock(ElasticsearchCategoryLoadService.class);
+    de.kittelberger.illusion.model.Category cat = mock(de.kittelberger.illusion.model.Category.class);
+    when(categoryLoadService.loadCategories("DE", "de")).thenReturn(List.of(cat));
+
+    LoadDataService svc = new LoadDataService(
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+      Optional.of(categoryLoadService)
+    );
+
+    List<de.kittelberger.illusion.model.Category> result = svc.getCategories("DE", "de");
+
+    assertThat(result).containsExactly(cat);
+    verify(categoryLoadService).loadCategories("DE", "de");
+  }
+
+  @Test
+  void getCategories_throwsWhenEsNotEnabled() {
+    LoadDataService noEs = new LoadDataService(
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+    );
+
+    assertThatThrownBy(() -> noEs.getCategories("DE", "de"))
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("elasticsearch.enabled=true");
   }
 }
 

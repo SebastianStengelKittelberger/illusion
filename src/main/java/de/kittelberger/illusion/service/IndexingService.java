@@ -1,7 +1,10 @@
 package de.kittelberger.illusion.service;
 
+import de.kittelberger.illusion.data.ElasticsearchCategoryResultIndexService;
 import de.kittelberger.illusion.data.ElasticsearchIndexService;
 import de.kittelberger.illusion.data.LoadDataService;
+import de.kittelberger.illusion.mapping.CategoryMappingContext;
+import de.kittelberger.illusion.mapping.CategoryMappingHandler;
 import de.kittelberger.illusion.mapping.MappingContext;
 import de.kittelberger.illusion.mapping.MappingHandler;
 import de.kittelberger.illusion.model.*;
@@ -21,7 +24,9 @@ public class IndexingService {
 
   private final LoadDataService loadDataService;
   private final List<MappingHandler> mappingHandlers;
+  private final List<CategoryMappingHandler> categoryMappingHandlers;
   private final Optional<ElasticsearchIndexService> elasticsearchIndexService;
+  private final Optional<ElasticsearchCategoryResultIndexService> elasticsearchCategoryResultIndexService;
   private final FilterIndexContributor filterIndexContributor;
 
   @Value("${xml.product-limit:-1}")
@@ -30,18 +35,22 @@ public class IndexingService {
   @Value("${xml.product-ids:}")
   private List<Long> productIds = new java.util.ArrayList<>();
 
-  @Value("${illusion.index.batch-size:100}")
+  @Value("${illusion.index.batch-size:2000}")
   private int batchSize;
 
   public IndexingService(
     final LoadDataService loadDataService,
     final List<MappingHandler> mappingHandlers,
+    final List<CategoryMappingHandler> categoryMappingHandlers,
     final Optional<ElasticsearchIndexService> elasticsearchIndexService,
+    final Optional<ElasticsearchCategoryResultIndexService> elasticsearchCategoryResultIndexService,
     final FilterIndexContributor filterIndexContributor
   ) {
     this.loadDataService = loadDataService;
     this.mappingHandlers = mappingHandlers;
+    this.categoryMappingHandlers = categoryMappingHandlers;
     this.elasticsearchIndexService = elasticsearchIndexService;
+    this.elasticsearchCategoryResultIndexService = elasticsearchCategoryResultIndexService;
     this.filterIndexContributor = filterIndexContributor;
   }
 
@@ -188,5 +197,37 @@ public class IndexingService {
     results.putAll(productResult);
     // Store context keyed by every SKU that was produced, for filter predicate evaluation
     productResult.keySet().forEach(skuKey -> contexts.put(skuKey, ctx));
+  }
+
+  public Map<String, Map<String, Pair<String, Object>>> indexCategories(
+    final List<MapConfig> mapConfigs,
+    final String country,
+    final String language
+  ) {
+    List<MapConfig> categoryConfigs = mapConfigs.stream()
+      .filter(config -> TargetType.CATEGORY.equals(config.getTarget()))
+      .toList();
+
+    List<Category> categories = loadDataService.getCategories(country, language);
+    Locale locale = Locale.of(language, country.toUpperCase());
+
+    Map<String, Map<String, Pair<String, Object>>> results = new ConcurrentHashMap<>();
+
+    for (Category category : categories) {
+      CategoryMappingContext ctx = new CategoryMappingContext(category, locale);
+      categoryConfigs.forEach(config ->
+        categoryMappingHandlers.stream()
+          .filter(h -> h.supports(config))
+          .forEach(h -> h.apply(config, ctx, results))
+      );
+      Map<String, Pair<String, Object>> entry = results.computeIfAbsent(category.ukey(), k -> new ConcurrentHashMap<>());
+      entry.put("skus", Pair.of("list", category.skus()));
+      if (category.parentId() != null) {
+        entry.put("parentId", Pair.of("long", category.parentId()));
+      }
+    }
+
+    elasticsearchCategoryResultIndexService.ifPresent(es -> es.indexResults(results, country, language));
+    return results;
   }
 }

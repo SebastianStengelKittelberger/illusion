@@ -57,7 +57,7 @@ public class FilterIndexContributor {
 
     if (filterConfigs.isEmpty()) {
       return;
-    };
+    }
 
     results.forEach((skuKey, fields) -> {
       Map<String, Object> filters = new HashMap<>();

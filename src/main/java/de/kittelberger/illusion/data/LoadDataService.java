@@ -1,5 +1,6 @@
 package de.kittelberger.illusion.data;
 
+import de.kittelberger.illusion.model.Category;
 import de.kittelberger.illusion.model.Image;
 import de.kittelberger.illusion.model.Product;
 import de.kittelberger.illusion.model.Reference;
@@ -20,17 +21,20 @@ public class LoadDataService {
   private final Optional<ElasticsearchReferenceLoadService> elasticsearchReferenceLoadService;
   private final Optional<ElasticsearchMediaObjectLoadService> elasticsearchMediaObjectLoadService;
   private final Optional<ElasticsearchConfigLoadService> elasticsearchConfigLoadService;
+  private final Optional<ElasticsearchCategoryLoadService> elasticsearchCategoryLoadService;
 
   public LoadDataService(
     Optional<ElasticsearchProductLoadService> elasticsearchProductLoadService,
     Optional<ElasticsearchReferenceLoadService> elasticsearchReferenceLoadService,
     Optional<ElasticsearchMediaObjectLoadService> elasticsearchMediaObjectLoadService,
-    Optional<ElasticsearchConfigLoadService> elasticsearchConfigLoadService
+    Optional<ElasticsearchConfigLoadService> elasticsearchConfigLoadService,
+    Optional<ElasticsearchCategoryLoadService> elasticsearchCategoryLoadService
   ) {
     this.elasticsearchProductLoadService = elasticsearchProductLoadService;
     this.elasticsearchReferenceLoadService = elasticsearchReferenceLoadService;
     this.elasticsearchMediaObjectLoadService = elasticsearchMediaObjectLoadService;
     this.elasticsearchConfigLoadService = elasticsearchConfigLoadService;
+    this.elasticsearchCategoryLoadService = elasticsearchCategoryLoadService;
   }
 
   public List<Product> getProducts(String country, String language) {
@@ -70,5 +74,11 @@ public class LoadDataService {
     return elasticsearchConfigLoadService
       .orElseThrow(() -> new IllegalStateException("Elasticsearch is not enabled — set elasticsearch.enabled=true"))
       .loadDomain();
+  }
+
+  public List<Category> getCategories(String country, String language) {
+    return elasticsearchCategoryLoadService
+      .orElseThrow(() -> new IllegalStateException("Elasticsearch is not enabled — set elasticsearch.enabled=true"))
+      .loadCategories(country, language);
   }
 }

@@ -41,9 +41,10 @@ cd ~/work/summerlight && npm run dev
 
 | Index | Inhalt |
 |-------|--------|
-| `illusion-{land}-{sprache}` | Gemappte Produktdaten |
-| `illusion-mapping-config` | MappingConfig-Versionen pro Land/Sprache |
-| `bosch-products`, `bosch-references` etc. | Rohdaten vom Adapter |
+| `illusion-{land}-{sprache}` | Gemappte Produktdaten inkl. `filters`-Objekt |
+| `illusion-mapping-config` | MappingConfig-Versionen pro Land/Sprache (append-only, Timestamp) |
+| `illusion-labels` | Namespace-basierte Labels (z.B. `namespace: "filter"` für Filter-Labels) |
+| `bosch-products`, `bosch-references`, `bosch-media-objects`, `bosch-domain` | Rohdaten vom Adapter |
 | `moonlight-vorlagen` | Globale HTML-Slot-Templates |
 | `moonlight-vorlagen-history` | Versionshistorie pro Vorlage |
 | `moonlight-pages` | Seitenkonfigurationen (Slots) pro Country/Language |
@@ -56,10 +57,23 @@ cd ~/work/summerlight && npm run dev
 |-------|--------------|
 | `/ukeys` | UKeys erkunden, gemappt vs. ungemappt |
 | `/configs` | Mapping-Regeln verwalten (CRUD, Import/Export) |
-| `/editor` | Mapping-Config im Detail bearbeiten |
+| `/editor` | Mapping-Config im Detail bearbeiten inkl. Filter-Konfiguration |
 | `/templates` | HTML-Vorlagen + Seiten + Visual Edit Mode |
 | `/routing` | URL-Routing-Tabelle pflegen |
 | `/quality` | Datenqualitäts-Dashboard |
+| `/filter-labels` | Filter-Labels pflegen (Anzeigenamen für Filter-UKeys) |
+
+## Illusion – Wichtige Endpoints
+
+| Endpoint | Beschreibung |
+|----------|--------------|
+| `POST /{country}/{language}/index` | Indexierung starten (Body: `List<MapConfig>`) |
+| `GET /{country}/{language}/mapping-config` | Aktuelle MapConfig laden |
+| `PUT /{country}/{language}/mapping-config` | MapConfig speichern |
+| `GET /{country}/{language}/filter-config` | Filter-Konfiguration (aktive FilterConfigs als `FilterConfigEntry[]`) |
+| `GET/PUT /{country}/{language}/filter-labels` | Filter-Labels lesen/speichern |
+| `GET /{country}/{language}/dataQuality` | Datenqualitäts-Übersicht |
+| `GET /{country}/{language}/information` | Ukey-Übersicht (gemappt/ungemappt) |
 
 ## Moonlight – Wichtige Endpoints
 
@@ -76,13 +90,12 @@ cd ~/work/summerlight && npm run dev
 
 Vollständigen Implementierungsstand: siehe `IMPLEMENTIERUNGSSTAND.md`
 
-Noch offen / langfristig:
-- Authentifizierung / Zugriffsschutz
+Noch offen / nächste Schritte:
+- Authentifizierung / Rollen für Summerlight
 - Draft → Staging → Production Pipeline
 - Generic Adapter Wizard (kein Custom-Code nötig)
-- Dynamisches Produkttyp-Routing
-- Variantenmanagement
-- SEO-Felder, Sitemap
+- Dynamisches Produkttyp-Routing (Moonlight)
 - Redis Cache für horizontales Skalieren
+- Docker Compose für einfachen lokalen Start
 
 

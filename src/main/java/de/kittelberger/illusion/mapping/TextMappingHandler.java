@@ -41,7 +41,7 @@ public class TextMappingHandler implements MappingHandler {
         if (result.containsKey(key)) {
           result.get(key).put(config.getTargetField(), Pair.of(config.getTargetFieldType(), value));
         } else {
-          result.put(key, Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), value)));
+          result.put(key, new HashMap<>(Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), value))));
         }
       }
 

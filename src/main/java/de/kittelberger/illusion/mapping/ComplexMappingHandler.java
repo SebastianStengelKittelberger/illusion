@@ -64,7 +64,11 @@ public class ComplexMappingHandler implements MappingHandler{
         } else {
           Map<String,Object> valueMap = new HashMap<>();
           valueMap.put(attribute.getUkey(), value);
-          result.put(entry.getKey(), new HashMap<>(Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), valueMap))));
+          if (result.containsKey(entry.getKey())) {
+            result.get(entry.getKey()).put(config.getTargetField(), Pair.of(config.getTargetFieldType(), valueMap));
+          } else {
+            result.put(entry.getKey(), new HashMap<>(Map.of(config.getTargetField(), Pair.of(config.getTargetFieldType(), valueMap))));
+          }
         }
       });
     }

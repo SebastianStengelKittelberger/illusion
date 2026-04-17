@@ -15,6 +15,7 @@ elasticsearch:
   host: localhost
   port: 9200
   index-prefix: illusion          # index name pattern: {prefix}-{country}-{language}
+  max-fields: 5000                # index.mapping.total_fields.limit (default ES: 1000)
   product-index-prefix: bosch-products      # index to read raw products from (written by bosch.adapter)
   reference-index-prefix: bosch-references  # index to read references from (written by bosch.adapter)
   media-object-index: bosch-media-objects   # global, locale-independent

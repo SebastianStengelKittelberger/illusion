@@ -130,6 +130,27 @@ class ComplexMappingHandlerTest {
   }
 
   @Test
+  void apply_doesNotOverwriteOtherFieldsAlreadyInResult() {
+    Reference ref = new Reference(1L, "ref-ukey", "ref-name",
+      new AttrClassRef("FEAT", List.of(new AttrClass("AC", "AC_UKEY"))));
+
+    Attribute attr = attr("FEAT", "FeatureValue");
+    MappingContext ctx = ctx(SKU, attr, List.of(ref));
+
+    MapConfig config = complexConfig(List.of("AC_UKEY"), "features", "OBJECT");
+    Map<String, Map<String, Pair<String, Object>>> result = new HashMap<>();
+    // Pre-populate with a title field (simulates TextMappingHandler having already run)
+    result.put(SKU, new HashMap<>(Map.of("title", Pair.of("STRING", "My Product Title"))));
+
+    handler.apply(config, ctx, result);
+
+    // title must still be present after ComplexMappingHandler adds the 'features' field
+    assertThat(result.get(SKU)).containsKey("title");
+    assertThat(result.get(SKU).get("title").getRight()).isEqualTo("My Product Title");
+    assertThat(result.get(SKU)).containsKey("features");
+  }
+
+  @Test
   void apply_mergesIntoExistingSkuEntry() {
     Reference ref = new Reference(1L, "ref-ukey", "ref-name",
       new AttrClassRef("FEAT2", List.of(new AttrClass("AC", "AC_UKEY"))));
